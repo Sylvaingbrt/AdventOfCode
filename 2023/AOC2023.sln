@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaitForIt", "WaitForIt\Wait
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CamelCards", "CamelCards\CamelCards.csproj", "{F1785605-F198-4F97-8EC1-662F46887AFB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HauntedWasteland", "HauntedWasteland\HauntedWasteland.csproj", "{A7CF5A70-05DE-4551-80D6-2D13EF8817B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,5 +60,9 @@ Global
 		{F1785605-F198-4F97-8EC1-662F46887AFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1785605-F198-4F97-8EC1-662F46887AFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1785605-F198-4F97-8EC1-662F46887AFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7CF5A70-05DE-4551-80D6-2D13EF8817B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7CF5A70-05DE-4551-80D6-2D13EF8817B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7CF5A70-05DE-4551-80D6-2D13EF8817B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7CF5A70-05DE-4551-80D6-2D13EF8817B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
