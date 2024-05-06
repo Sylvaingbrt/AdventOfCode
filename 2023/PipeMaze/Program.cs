@@ -1,5 +1,4 @@
-﻿
-using System.Drawing;
+﻿using System.Drawing;
 
 string line;
 int result1 = 1;
@@ -10,12 +9,11 @@ Point prevPoint1;
 Point point2 = new Point(-1, -1);
 Point prevPoint2;
 List<Point> chain = new List<Point>();
-
 bool startFound = false;
 
 //For part 2
 int result2 = 0;
-bool lookLeft = true;
+bool lookLeft = false; //CHANGE THIS VARIABLE TO LOOK AT LEFT SIDE OR RIGHT SIDE TILES WHILE MOVING ALONG THE CHAIN
 bool outside = false;
 List<Point> seenTiles = new List<Point>();
 Point lookOffSet = new Point(0, 0);
@@ -192,37 +190,41 @@ try
         for(int j=0;j<2;j++){
             int offSet = (int)Math.Pow(-1,j);
             if(i%2==0){
-                char c = map[start.Y][start.X+offSet];
-                if(c=='-' || (offSet<0 && (c=='L' || c=='F')) || (offSet>0 && (c=='J' || c=='7'))){
-                    Console.WriteLine("Can move at pos {0},{1} by {2}",start.X+offSet,start.Y,map[start.Y][start.X+offSet]);
-                    if(point1.X<0){
-                        point1.X = start.X+offSet;
-                        point1.Y = start.Y;
+                if(start.X+offSet>=0 && start.X+offSet<map[start.Y].Length){
+                    char c = map[start.Y][start.X+offSet];
+                    if(c=='-' || (offSet<0 && (c=='L' || c=='F')) || (offSet>0 && (c=='J' || c=='7'))){
+                        Console.WriteLine("Can move at pos {0},{1} by {2}",start.X+offSet,start.Y,map[start.Y][start.X+offSet]);
+                        if(point1.X<0){
+                            point1.X = start.X+offSet;
+                            point1.Y = start.Y;
 
-                        //For part 2
-                        lookOffSet.Y = lookLeft?-offSet:offSet;
+                            //For part 2
+                            lookOffSet.Y = lookLeft?-offSet:offSet;
+                        }
+                        else{
+                            point2.X = start.X+offSet;
+                            point2.Y = start.Y;
+                        }
+                        
                     }
-                    else{
-                        point2.X = start.X+offSet;
-                        point2.Y = start.Y;
-                    }
-                    
                 }
             }
             else{
-                char c = map[start.Y+offSet][start.X];
-                if(c=='|' || (offSet>0 && (c=='L' || c=='J')) || (offSet<0 && (c=='F' || c=='7'))){
-                    Console.WriteLine("Can move at pos {0},{1} by {2}",start.X,start.Y+offSet,map[start.Y+offSet][start.X]);
-                    if(point1.X<0){
-                        point1.X = start.X;
-                        point1.Y = start.Y+offSet;
+                if(start.Y+offSet>=0 && start.Y+offSet<map.Count){
+                    char c = map[start.Y+offSet][start.X];
+                    if(c=='|' || (offSet>0 && (c=='L' || c=='J')) || (offSet<0 && (c=='F' || c=='7'))){
+                        Console.WriteLine("Can move at pos {0},{1} by {2}",start.X,start.Y+offSet,map[start.Y+offSet][start.X]);
+                        if(point1.X<0){
+                            point1.X = start.X;
+                            point1.Y = start.Y+offSet;
 
-                        //For part 2
-                        lookOffSet.X = lookLeft?offSet:-offSet;
-                    }
-                    else{
-                        point2.X = start.X;
-                        point2.Y = start.Y+offSet;
+                            //For part 2
+                            lookOffSet.X = lookLeft?offSet:-offSet;
+                        }
+                        else{
+                            point2.X = start.X;
+                            point2.Y = start.Y+offSet;
+                        }
                     }
                 }
             }
@@ -263,16 +265,18 @@ try
     //repeat the process until we finish the chain loop and take the number of tile we got if we didn't touch the border or the remaining tiles else (nbTotal - chain - checkedTiles).
     
     foreach(Point p in chain){
-        LookAtTile(new Point(p.X + lookOffSet.X,p.Y + lookOffSet.Y));
+        LookAtTile(new Point(Math.Max(Math.Min(p.X + lookOffSet.X,map[0].Length-1),0),Math.Max(Math.Min(p.Y + lookOffSet.Y,map.Count-1),0)));
         if(UpdateOffset(ref lookOffSet,p,prevPointChain)){
-            LookAtTile(new Point(p.X + lookOffSet.X,p.Y + lookOffSet.Y));
+            LookAtTile(new Point(Math.Max(Math.Min(p.X + lookOffSet.X,map[0].Length-1),0),Math.Max(Math.Min(p.Y + lookOffSet.Y,map.Count-1),0)));
         }   
         prevPointChain = p;
     }
+    LookAtTile(new Point(chain[0].X + lookOffSet.X,chain[0].Y + lookOffSet.Y));
 
     if(outside){
         //For some reason, the calcul when lookLeft=false is false. I will try to look into it but for now THIS PROGRAM WORKS ONLY WHEN "lookLeft=true".
-        Console.WriteLine("We looked at outside tiles. Total:{0}, Seen:{1}, Chain:{2} WARNING WRONG RESULT",map[0].Length*map.Count,seenTiles.Count,chain.Count);
+        //(POST FIX EDIT: it was because I didn't checked that the point I was checking was inbound while calling "LookAtTile" from outside the function itself... Found by checking on the smaller example given with the rules)
+        Console.WriteLine("We looked at outside tiles. Total:{0}, Seen:{1}, Chain:{2}",map[0].Length*map.Count,seenTiles.Count,chain.Count);
         result2 = map[0].Length*map.Count - seenTiles.Count - chain.Count;
     }
     else{
@@ -281,7 +285,43 @@ try
     }
 
     Console.WriteLine("End of input. Result game 2 found: {0}",result2);
+    
+    /*
+    //DEBUG LOGS AND OUTPUT
+    List<string> outMap = new List<string>();
+    char seenTile = 'I';
+    char otherTile = 'O';
+    if(outside){
+        seenTile = 'O';
+        otherTile = 'I';
+    }
 
+    for(int i=0; i<map.Count; i++){
+        string mapLine = map[i];
+        string outLine = "";
+        for(int j=0; j<mapLine.Length;j++){
+            Point pos = new Point(j,i);
+            if(chain.Contains(pos)){
+                outLine += 'C';
+            }
+            else if(seenTiles.Contains(pos)){
+                outLine+=seenTile;
+            }
+            else{
+                outLine+=otherTile;
+            }
+        }
+        outMap.Add(outLine);
+    }
+
+    // Append text to an existing file named "Output.txt".
+    using (StreamWriter outputFile = new StreamWriter(Directory.GetCurrentDirectory()+"\\..\\..\\..\\Output.txt", true))
+    {
+        foreach (string outLine in outMap){
+            outputFile.WriteLine(outLine);
+        }
+    }
+    */
 }
 catch(Exception e)
 {
