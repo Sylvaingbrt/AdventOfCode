@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MirageMaintenance", "Mirage
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipeMaze", "PipeMaze\PipeMaze.csproj", "{A71EE927-7B36-4A5D-AED8-CD1B854277F5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmicExpansion", "CosmicExpansion\CosmicExpansion.csproj", "{6E0560CF-320C-4EBE-91D0-9C35E6AD9B92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,5 +78,9 @@ Global
 		{A71EE927-7B36-4A5D-AED8-CD1B854277F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A71EE927-7B36-4A5D-AED8-CD1B854277F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A71EE927-7B36-4A5D-AED8-CD1B854277F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E0560CF-320C-4EBE-91D0-9C35E6AD9B92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E0560CF-320C-4EBE-91D0-9C35E6AD9B92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E0560CF-320C-4EBE-91D0-9C35E6AD9B92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E0560CF-320C-4EBE-91D0-9C35E6AD9B92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
