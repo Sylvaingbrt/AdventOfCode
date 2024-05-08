@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿//I looked for hints for the first part. The recursive way seemed too heavy and I wanted to search for rules and constraints that would allow me to find the answer an other way. But knowing others had choose a recursive method made me decide to try the same.
 
 string line;
 double result1 = 0;
