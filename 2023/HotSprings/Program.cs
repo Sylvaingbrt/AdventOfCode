@@ -47,7 +47,6 @@ class Program
 {
     static string line;
     static double result1 = 0;
-    static double resultBis = 0;
     static List<int> groups = new List<int>();
 
     //For part 2
@@ -56,6 +55,7 @@ class Program
     static List<int> extendedGroups = new List<int>();
     
     static Dictionary<Tuple<string,List<int>>,double> possibilitiesMemoization = new Dictionary<Tuple<string, List<int>>,double>(new MyEqualityComparer());
+    static Dictionary<Tuple<string,List<int>>,double> possibilitiesMemoizationBis = new Dictionary<Tuple<string, List<int>>,double>(new MyEqualityComparer());
 
     static List<int> GetGroups(string input){
         List<int> result = new List<int>();
@@ -67,7 +67,7 @@ class Program
         return result;
     }
 
-    static bool ValidString(string input, string restString, List<int> listOfSize, ref List<int> restOfSize){
+    static bool ValidString(string input, int maxSize, List<int> listOfSize){
         bool needToGetNewSize = true;
         int indexList = -1;
         int sizeInList = 0;
@@ -96,7 +96,7 @@ class Program
 
         //Console.WriteLine("Input:{0}, maxSize:{1}, listCount:{2}, index:{3}, leftSize:{4}",input.Length,maxSize,listOfSize.Count,indexList,sizeInList);
 
-        if(restString.Length==0){
+        if(input.Length==maxSize){
             //full length, need to match perfectly the list
             if(listOfSize.Count-1!=indexList || sizeInList>0){
                 return false;
@@ -105,77 +105,36 @@ class Program
         else{
             //Check if possible for current input and if possible for reste of size
             int rest = sizeInList-1;
-            int currentRest = 0;
 
             for(int i=indexList+1;i<listOfSize.Count;i++){
                 rest+=listOfSize[i] + 1;
             }
-
-            bool newGroup = false;
-            foreach(char c in restString){
-                if(c!='.'){
-                    currentRest++;
-                    if(newGroup){
-                        currentRest++;
-                    }
-                }
-                else{
-                    newGroup = true;
-                }
-            }
             
-            if(currentRest<rest){
+            if(maxSize-input.Length<rest){
                 return false;
             }
         }
-
-        if(sizeInList>0){
-            restOfSize.Add(sizeInList);
-        }
-        for(int i=indexList+1;i<listOfSize.Count;i++){
-            restOfSize.Add(listOfSize[i]);
-        }
-
         return true;
     }
 
-    static double GetPossibilityForLine(string fullLine, int partIdx, List<int> listOfSize){
-        string part1 = fullLine.Substring(0,partIdx);
-        string part2 = fullLine.Substring(partIdx,fullLine.Length-partIdx);
-        List<int> restOfSize = new List<int>();
-        bool isValid = ValidString(part1, part2, listOfSize, ref restOfSize);
-        
-        if(isValid){
-            Tuple<string,List<int>> key = Tuple.Create(part2,restOfSize);
-            if(!possibilitiesMemoization.ContainsKey(key)){
-
-                if(partIdx==fullLine.Length-1){
-                    //Console.WriteLine("{0} is valid and complete. (Part 2: {1})",part1,part2);
-                    possibilitiesMemoization[key] = 1;
-                }
-                else{
-                    //Console.WriteLine("{0} is valid. (Part 2: {1})",part1,part2);
-                    char c = fullLine[partIdx];
-                    if(c=='?'){
-                        possibilitiesMemoization[key] = GetPossibilityForLine(part1 + "." + part2.Substring(1,part2.Length-1), partIdx+1, listOfSize) + GetPossibilityForLine(part1 + "#" + part2.Substring(1,part2.Length-1), partIdx+1, listOfSize);
-                    }
-                    else{
-                        possibilitiesMemoization[key] =  GetPossibilityForLine(fullLine, partIdx+1, listOfSize);
-                    }
-                }
-
+    static double GetPossibilityForLine(string fullLine, string part, List<int> listOfSize){
+        if(ValidString(part, fullLine.Length, listOfSize)){
+            
+            if(part.Length==fullLine.Length){
+                //Console.WriteLine("{0} is valid and complete",part);
+                return 1;
+            }
+            //Console.WriteLine("{0} is valid",part);
+            char c = fullLine[part.Length];
+            if(c=='?'){
+                return GetPossibilityForLine(fullLine, part+".", listOfSize) + GetPossibilityForLine(fullLine, part+"#", listOfSize);
             }
             else{
-                Console.WriteLine("{0} exist!! valeur: {1}",part2, possibilitiesMemoization[key]);
+                return GetPossibilityForLine(fullLine, part+c, listOfSize);
             }
-            return possibilitiesMemoization[key];
         }
-        else{
-            Tuple<string,List<int>> key = Tuple.Create(part1+part2,listOfSize);
-            //Console.WriteLine("{0} is not valid. (Part 2: {1})",part1,part2);
-            possibilitiesMemoization[key] = 0;
-            return possibilitiesMemoization[key];
-        }
+        //Console.WriteLine("{0} is not valid",part);
+        return 0;
     }
 
     static int GetNbSpot(string input){
@@ -223,72 +182,91 @@ class Program
         }
         double result = 0;
         //Console.WriteLine("{1}. Get nb for : {0}",input,depth);
-        if(input.Length==0){
-            result += (constraints.Count==0) ? 1 : 0;
+
+        Tuple<string,List<int>> key = Tuple.Create(input,constraints.ToList()); //Use of ".ToList()" to create a "clone" of our variable. If not, any changes of values afterward will change values here too !!!!!! 
+        if(possibilitiesMemoizationBis.ContainsKey(key)){
+            result = possibilitiesMemoizationBis[key];
+            //Console.WriteLine("Known key : {0} {1}. With result {2}",input,debugConstraints,result);
         }
         else{
-            int nbSpots = GetNbSpot(input);
-            int nbConstraints = GetNbConstraints(constraints);
-            //Console.WriteLine("{2}. The input: {3} {4} has nbSpots : {0} | nbConstraints: {1}",nbSpots,nbConstraints,depth,input,debugConstraints);
-            
-            //if(nbSpots==nbConstraints){
-            //    result = 1;
-            //}
-            //else{
-                if(nbSpots<nbConstraints){
-                    result = 0;
-                }
-                else{
-                    if(input[0]=='.'){
-                        result = GetNbPossibility(input.Substring(1,input.Length-1), constraints.ToList(),depth);
+            if(input.Length==0){
+                result += (constraints.Count==0) ? 1 : 0;
+            }
+            else{
+                int nbSpots = GetNbSpot(input);
+                int nbConstraints = GetNbConstraints(constraints);
+                //Console.WriteLine("{2}. The input: {3} {4} has nbSpots : {0} | nbConstraints: {1}",nbSpots,nbConstraints,depth,input,debugConstraints);
+                
+                //if(nbSpots==nbConstraints){
+                //    result = 1;
+                //}
+                //else{
+                    if(nbSpots<nbConstraints){
+                        result = 0;
                     }
-                    else if(input[0]=='#'){
-                        if(nbConstraints==0){
-                            result = 0;
+                    else{
+                        if(input[0]=='.'){
+                            result = GetNbPossibility(input.Substring(1,input.Length-1), constraints.ToList(),depth);
                         }
-                        else{
-                            int offSet = constraints[0];
-                            constraints.RemoveAt(0);
-                            if(input.Length<=offSet+1){
-                                result = (constraints.Count==0) ? 1 : 0;
+                        else if(input[0]=='#'){
+                            if(nbConstraints==0){
+                                result = 0;
                             }
                             else{
-                                if(input[offSet]=='#'){
+                                int offSet = constraints[0];
+                                constraints.RemoveAt(0);
+                                if(input.Substring(0,Math.Min(offSet,input.Length)).Contains(".")){
                                     result = 0;
                                 }
                                 else{
-                                    result = GetNbPossibility(input.Substring(offSet+1,input.Length-(offSet+1)), constraints.ToList(),depth);
+                                    if(input.Length<=offSet){
+                                        result = (constraints.Count==0) ? 1 : 0;
+                                    }
+                                    else{
+                                        if(input[offSet]=='#'){
+                                            result = 0;
+                                        }
+                                        else{
+                                            result = GetNbPossibility(input.Substring(offSet+1,input.Length-(offSet+1)), constraints.ToList(),depth);
+                                        }
+                                    }
                                 }
                             }
                         }
-                        
-                    }
-                    else{
-                        //Console.WriteLine("{1}. Maybe two possibilities for : {0}",input,depth);
-                        double option1 = GetNbPossibility(input.Substring(1,input.Length-1), constraints.ToList(),depth);
-                        //Console.WriteLine("{1}. Option 1 : {0}",option1,depth);
-                        double option2 = 0;
-                        if(nbConstraints!=0){
-                            //Console.WriteLine("{1}. Constraint : {0}",constraints.Count,depth);
-                            int offSet = constraints[0];
-                            constraints.RemoveAt(0);
-                            if((input.Length<=offSet+1) && (constraints.Count==0)){
-                                option2 = 1;
-                            }
-                            else if(input.Length>1){
-                                if(input[1]!='#'){
-                                    option2 = GetNbPossibility(input.Substring(offSet+1,input.Length-(offSet+1)), constraints.ToList(),depth+1);
+                        else{
+                            //Console.WriteLine("{1}. Maybe two possibilities for : {0}",input,depth);
+                            double option1 = GetNbPossibility(input.Substring(1,input.Length-1), constraints.ToList(),depth);
+                            //Console.WriteLine("{1}. Option 1 : {0}",option1,depth);
+                            double option2 = 0;
+                            if(nbConstraints!=0){
+                                //Console.WriteLine("{1}. Constraint : {0}",constraints.Count,depth);
+                                int offSet = constraints[0];
+                                constraints.RemoveAt(0);
+                                if(input.Substring(0,Math.Min(offSet,input.Length)).Contains(".")){
+                                    option2 = 0;
+                                }
+                                else{
+                                    if((input.Length<=offSet) && (constraints.Count==0)){
+                                        option2 = 1;
+                                    }
+                                    else if(input.Length>1){
+                                        if(input[offSet]!='#'){
+                                            option2 = GetNbPossibility(input.Substring(offSet+1,input.Length-(offSet+1)), constraints.ToList(),depth+1);
+                                        }
+                                    }
                                 }
                             }
+                            //Console.WriteLine("{1}. Option 1 : {0}",option1,depth);
+                            //Console.WriteLine("{1}. Option 2 : {0}",option2,depth);
+                            result = option1 + option2;
                         }
-                        //Console.WriteLine("{1}. Option 1 : {0}",option1,depth);
-                        //Console.WriteLine("{1}. Option 2 : {0}",option2,depth);
-                        result = option1 + option2;
                     }
-                }
-            //}
-            
+                //}
+                
+            }
+            possibilitiesMemoizationBis[key] = result;
         }
+        
 
         
         //Console.WriteLine("{3}. The input: {0} {1} has a result of {2}",input,debugConstraints,result,depth);
@@ -323,15 +301,15 @@ class Program
                     Console.WriteLine(group);
                     */
 
-                    //double nbForLine = GetPossibilityForLine(line, 0, groups);
-                    double nbForLineBis = GetNbPossibility(line, groups.ToList());
+                    //double nbForLine = GetPossibilityForLine(line, "", groups);
+                    double nbForLine = GetNbPossibility(line, groups.ToList());
                     //Console.WriteLine("Possibilities for this line: {0}",nbForLine);
-                    Console.WriteLine("Possibilities bis for this line: {0}",nbForLineBis);
+                    Console.WriteLine("Possibilities bis for this line: {0}",nbForLine);
 
                     //result1 += nbForLine;
-                    resultBis += nbForLineBis;
+                    result1 += nbForLine;
 
-                    /*
+                    
                     extendedLine =line;
                     extendedGroups.Clear();  
                     foreach(int j in groups){
@@ -352,10 +330,10 @@ class Program
                     }
                     Console.WriteLine(extendedGroup);
                     
-                    nbForLine = GetPossibilityForLine(extendedLine, 0, extendedGroups);
-                    Console.WriteLine("Extended possibilities for this line: {0}",nbForLine);
+                    nbForLine = GetNbPossibility(extendedLine, extendedGroups.ToList());
+                    Console.WriteLine("Extended possibilities bis for this line: {0}",nbForLine);
                     result2 += nbForLine;
-                    */
+                    
                     
                     Console.WriteLine("");
 
@@ -369,10 +347,24 @@ class Program
 
                 Console.WriteLine("");
 
-                Console.WriteLine("End of input. Result game 1 found: {0}",result1);
-                Console.WriteLine("End of input. Result bis game 1 found: {0}",resultBis);
-                Console.WriteLine("End of input. Result game 2 found: {0}",result2);
-                Console.WriteLine("Memoization size: {0}",possibilitiesMemoization.Count);
+                //Console.WriteLine("End of input. Result game 1 found: {0}",result1);
+                Console.WriteLine("End of input. Result bis game 1 found: {0}",result1);
+                Console.WriteLine("End of input. Result bis game 2 found: {0}",result2);
+                //Console.WriteLine("Memoization size: {0}",possibilitiesMemoization.Count);
+                Console.WriteLine("Memoization size: {0}",possibilitiesMemoizationBis.Count);
+                /*
+                foreach(var entry in possibilitiesMemoization){
+                    string debugConstraints = "";
+                    for(int i = 0; i < entry.Key.Item2.Count; i++){
+                        debugConstraints+=entry.Key.Item2[i].ToString();
+                        if(i<entry.Key.Item2.Count-1){
+                            debugConstraints+=", ";
+                        }
+                    }
+                    Console.WriteLine("Memoization entry: {0} {1}. Value: {2}",entry.Key.Item1,debugConstraints,entry.Value);
+                    
+                }
+                */
                 
             }
             catch(Exception e)
