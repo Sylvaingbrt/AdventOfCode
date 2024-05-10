@@ -2,6 +2,8 @@
 //Part 2 had me too I confess. Memoization is a great idea, and it seems I don't use it often enough to be able to think about quickly haha.
 
 //To use a dictionary with a complex type like a List, we need to make a custom IEqualityComparer, and that makes us use class:
+using System.Diagnostics;
+
 public class MyEqualityComparer : IEqualityComparer<Tuple<string,List<int>>>
 {
     public bool Equals(Tuple<string,List<int>> x, Tuple<string,List<int>> y)
@@ -45,6 +47,7 @@ class Program
 {
     static string line;
     static double result1 = 0;
+    static double resultBis = 0;
     static List<int> groups = new List<int>();
 
     //For part 2
@@ -163,7 +166,7 @@ class Program
 
             }
             else{
-                Console.WriteLine("{0} exist!!",part2);
+                Console.WriteLine("{0} exist!! valeur: {1}",part2, possibilitiesMemoization[key]);
             }
             return possibilitiesMemoization[key];
         }
@@ -174,6 +177,125 @@ class Program
             return possibilitiesMemoization[key];
         }
     }
+
+    static int GetNbSpot(string input){
+        int nbSpot = 0;
+        bool group = false;
+        bool newGroup = false;
+        foreach(char c in input){
+            if(c!='.'){
+                group = true;
+                nbSpot++;
+                if(newGroup){
+                    nbSpot++;
+                    newGroup = false;
+                }
+            }
+            else{
+                if(group){
+                    newGroup = true;
+                }
+            }
+        }
+        return nbSpot;
+    }
+
+    static int GetNbConstraints(List<int> input){
+        int nbConstraints = 0;
+
+        for(int i=0;i<input.Count;i++){
+            nbConstraints+=input[i];
+            if(i<input.Count-1){
+                nbConstraints+=1;
+            }
+        }
+
+        return nbConstraints;
+    }
+
+    static double GetNbPossibility(string input, List<int> constraints, int depth = 0){
+        string debugConstraints = "";
+        for(int i = 0; i < constraints.Count; i++){
+            debugConstraints+=constraints[i].ToString();
+            if(i<constraints.Count-1){
+                debugConstraints+=", ";
+            }
+        }
+        double result = 0;
+        //Console.WriteLine("{1}. Get nb for : {0}",input,depth);
+        if(input.Length==0){
+            result += (constraints.Count==0) ? 1 : 0;
+        }
+        else{
+            int nbSpots = GetNbSpot(input);
+            int nbConstraints = GetNbConstraints(constraints);
+            //Console.WriteLine("{2}. The input: {3} {4} has nbSpots : {0} | nbConstraints: {1}",nbSpots,nbConstraints,depth,input,debugConstraints);
+            
+            //if(nbSpots==nbConstraints){
+            //    result = 1;
+            //}
+            //else{
+                if(nbSpots<nbConstraints){
+                    result = 0;
+                }
+                else{
+                    if(input[0]=='.'){
+                        result = GetNbPossibility(input.Substring(1,input.Length-1), constraints.ToList(),depth);
+                    }
+                    else if(input[0]=='#'){
+                        if(nbConstraints==0){
+                            result = 0;
+                        }
+                        else{
+                            int offSet = constraints[0];
+                            constraints.RemoveAt(0);
+                            if(input.Length<=offSet+1){
+                                result = (constraints.Count==0) ? 1 : 0;
+                            }
+                            else{
+                                if(input[offSet]=='#'){
+                                    result = 0;
+                                }
+                                else{
+                                    result = GetNbPossibility(input.Substring(offSet+1,input.Length-(offSet+1)), constraints.ToList(),depth);
+                                }
+                            }
+                        }
+                        
+                    }
+                    else{
+                        //Console.WriteLine("{1}. Maybe two possibilities for : {0}",input,depth);
+                        double option1 = GetNbPossibility(input.Substring(1,input.Length-1), constraints.ToList(),depth);
+                        //Console.WriteLine("{1}. Option 1 : {0}",option1,depth);
+                        double option2 = 0;
+                        if(nbConstraints!=0){
+                            //Console.WriteLine("{1}. Constraint : {0}",constraints.Count,depth);
+                            int offSet = constraints[0];
+                            constraints.RemoveAt(0);
+                            if((input.Length<=offSet+1) && (constraints.Count==0)){
+                                option2 = 1;
+                            }
+                            else if(input.Length>1){
+                                if(input[1]!='#'){
+                                    option2 = GetNbPossibility(input.Substring(offSet+1,input.Length-(offSet+1)), constraints.ToList(),depth+1);
+                                }
+                            }
+                        }
+                        //Console.WriteLine("{1}. Option 1 : {0}",option1,depth);
+                        //Console.WriteLine("{1}. Option 2 : {0}",option2,depth);
+                        result = option1 + option2;
+                    }
+                }
+            //}
+            
+        }
+
+        
+        //Console.WriteLine("{3}. The input: {0} {1} has a result of {2}",input,debugConstraints,result,depth);
+        return result;
+    }
+
+
     static void Main(string[] args){
             try
             {
@@ -201,11 +323,13 @@ class Program
                     Console.WriteLine(group);
                     */
 
-                    double nbForLine = GetPossibilityForLine(line, 0, groups);
+                    //double nbForLine = GetPossibilityForLine(line, 0, groups);
+                    double nbForLineBis = GetNbPossibility(line, groups.ToList());
+                    //Console.WriteLine("Possibilities for this line: {0}",nbForLine);
+                    Console.WriteLine("Possibilities bis for this line: {0}",nbForLineBis);
 
-                    Console.WriteLine("Possibilities for this line: {0}",nbForLine);
-
-                    result1 += nbForLine;
+                    //result1 += nbForLine;
+                    resultBis += nbForLineBis;
 
                     /*
                     extendedLine =line;
@@ -246,13 +370,14 @@ class Program
                 Console.WriteLine("");
 
                 Console.WriteLine("End of input. Result game 1 found: {0}",result1);
+                Console.WriteLine("End of input. Result bis game 1 found: {0}",resultBis);
                 Console.WriteLine("End of input. Result game 2 found: {0}",result2);
                 Console.WriteLine("Memoization size: {0}",possibilitiesMemoization.Count);
                 
             }
             catch(Exception e)
             {
-                Console.WriteLine("Exception: " + e.Message);
+                Console.WriteLine("Exception: {0}",e.ToString());
             }
             finally
             {
