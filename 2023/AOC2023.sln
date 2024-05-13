@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmicExpansion", "CosmicEx
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotSprings", "HotSprings\HotSprings.csproj", "{9BE0CBE3-6B7C-4856-85CB-D95726DEF4D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointOfIncidence", "PointOfIncidence\PointOfIncidence.csproj", "{F4F9BA3F-0B71-4531-B611-4B9D388DCACC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,5 +90,9 @@ Global
 		{9BE0CBE3-6B7C-4856-85CB-D95726DEF4D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BE0CBE3-6B7C-4856-85CB-D95726DEF4D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BE0CBE3-6B7C-4856-85CB-D95726DEF4D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4F9BA3F-0B71-4531-B611-4B9D388DCACC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4F9BA3F-0B71-4531-B611-4B9D388DCACC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4F9BA3F-0B71-4531-B611-4B9D388DCACC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4F9BA3F-0B71-4531-B611-4B9D388DCACC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
