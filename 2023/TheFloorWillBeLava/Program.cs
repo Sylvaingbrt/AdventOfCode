@@ -161,6 +161,25 @@ List<Tuple<Point,char>> Powering(Point coord, char dir){
     return result;
 }
 
+void NonRecursivePowering(List<Tuple<Point,char>> nextCoord){
+    List<List<Tuple<Point,char>>> allCoords = new List<List<Tuple<Point,char>>>{nextCoord};
+    while(allCoords.Count>0){
+        List<List<Tuple<Point,char>>> newAllCoords = new List<List<Tuple<Point,char>>>();
+        foreach(List<Tuple<Point,char>> coords in allCoords){
+            List<Tuple<Point,char>> newCoords = new List<Tuple<Point,char>>();
+            foreach (Tuple<Point,char> coord in coords){
+                //Console.WriteLine("Going for {0},{1} by {2}",coord.Item1.X,coord.Item1.Y,coord.Item2);
+                newCoords = Powering(coord.Item1,coord.Item2);
+                //Console.WriteLine("So we have a new list of {0} coords to go through.",newCoords.Count);
+                if(newCoords.Count > 0){    
+                    newAllCoords.Add(newCoords);
+                }
+            }
+        }
+        allCoords = newAllCoords;
+    }
+}
+
 try
 {
     //Pass the file path and file name to the StreamReader constructor
@@ -184,29 +203,53 @@ try
     //close the file
     sr.Close();
 
-    Point startPoint = new Point(0, 0);
-    List<Tuple<Point,char>> nextCoord = new List<Tuple<Point,char>>{Tuple.Create(startPoint,'r')};
-    List<List<Tuple<Point,char>>> allCoords = new List<List<Tuple<Point,char>>>{nextCoord};
-    while(allCoords.Count>0){
-        List<List<Tuple<Point,char>>> newAllCoords = new List<List<Tuple<Point,char>>>();
-        foreach(List<Tuple<Point,char>> coords in allCoords){
-            List<Tuple<Point,char>> newCoords = new List<Tuple<Point,char>>();
-            foreach (Tuple<Point,char> coord in coords){
-                //Console.WriteLine("Going for {0},{1} by {2}",coord.Item1.X,coord.Item1.Y,coord.Item2);
-                newCoords = Powering(coord.Item1,coord.Item2);
-                //Console.WriteLine("So we have a new list of {0} coords to go through.",newCoords.Count);
-                if(newCoords.Count > 0){    
-                    newAllCoords.Add(newCoords);
-                }
-            }
-        }
-        allCoords = newAllCoords;
-    }
+    Point topLeft = new Point(0, 0);
+    List<Tuple<Point,char>> topLeftRight = new List<Tuple<Point,char>>{Tuple.Create(topLeft,'r')};
+    NonRecursivePowering(topLeftRight);
 
     result1 = PoweredCells.Count;
 
     Console.WriteLine("");
     Console.WriteLine("End of input. Result game 1 found: {0}",result1);
+
+    
+
+    //For part 2
+    //We will do the same as part 1 but for all possible starting points and get the best result.
+    result2 = result1;
+    List<List<Tuple<Point,char>>> allStartingPoints = new List<List<Tuple<Point,Char>>>();
+
+    List<char> directions = new List<char>{'l','u','r','d'};
+    foreach(char dir in directions){
+        if(dir == 'l' || dir == 'r'){
+            for(int i = 0; i<mapString.Count; i++){               
+                int startX = dir=='r'?0:mapString[0].Length-1;
+                Point startPoint = new Point(startX, i);
+                List<Tuple<Point,char>> start = new List<Tuple<Point,char>>{Tuple.Create(startPoint,dir)};
+                allStartingPoints.Add(start);
+            }
+        }
+        else if(dir == 'u' || dir == 'd'){
+            for(int i = 0; i<mapString[0].Length; i++){               
+                int startY = dir=='d'?0:mapString.Count-1;
+                Point startPoint = new Point(i, startY);
+                List<Tuple<Point,char>> start = new List<Tuple<Point,char>>{Tuple.Create(startPoint,dir)};
+                allStartingPoints.Add(start);
+            }
+        }
+    }
+
+
+    foreach(List<Tuple<Point,char>> start in allStartingPoints){
+        PoweredCells.Clear();
+        NonRecursivePowering(start);
+        //Console.WriteLine("For start: {0},{1} by {2}, we get {3} powered cells",start[0].Item1.X,start[0].Item1.Y,start[0].Item2,PoweredCells.Count);
+        if(PoweredCells.Count>result2){
+            result2 = PoweredCells.Count;
+        }
+    }
+
+    Console.WriteLine("End of input. Result game 2 found: {0}",result2);
 
 }
 catch(Exception e)
