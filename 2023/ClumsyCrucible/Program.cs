@@ -3,28 +3,35 @@
 
 using System.Drawing;
 
-public class Node{
+public class Node : IEquatable<Node>
+{
     //We use Node here as a class and not a struct to check for null nodes
     public Point pos;
     public int gCost;
     public int hCost;
     public int weight;
     public int nbBeforeTurn = 2;
-    public Point fromPos; //If we had a Node here to put the previous Node instead of the Position, we could not have "Node" as a struct instead of a class.
-    public Node fromNode = null;
+    public Node from = null;
+    public Point fromPos = new Point(-1,-1);
     public string ch;
 
     public int GetFCost(){
         return gCost+hCost;
     }
 
-    public Node(Point p, int g, int h, int w, Point f, string c){
+    public Node(Point p, int g, int h, int w, string c){
         pos = p;
         gCost = g;
         hCost = h;
         weight = w;
-        fromPos = f;
         ch=c;
+    }
+
+    public bool Equals(Node otherNode){
+        if(otherNode != null){
+            return pos==otherNode.pos && nbBeforeTurn==otherNode.nbBeforeTurn && fromPos==otherNode.fromPos;
+        }
+        return false;
     }
 }
 
@@ -34,19 +41,6 @@ class Program
     static string line;
     static double result1 = 0;
     static List<List<int>> weightedMap = new List<List<int>>();
-    static List<List<List<Node>>> nodeMap = new List<List<List<Node>>>();
-
-    static Node GetNode(Point pos, Point from){
-        if(pos.X >= 0 && pos.X < nodeMap[0].Count && pos.Y >= 0 && pos.Y < nodeMap.Count){
-            List<Node> nodesAtPoint = nodeMap[pos.Y][pos.X];
-            foreach(Node node in nodesAtPoint){
-                if(node.fromPos == from){
-                    return node;
-                }
-            }
-        }
-        return null;
-    }
 
     static Node GetLowestFCostNode(List<Node> nodeList)
     {
@@ -68,29 +62,61 @@ class Program
         bool canMoveVertical = true;
         //Check if we need to turn
         if(currentNode.nbBeforeTurn==0){
-            if(currentNode.pos.X != currentNode.fromPos.X){
+            if(currentNode.from!=null && currentNode.pos.X != currentNode.from.pos.X){
                 canMoveHorizontal = false;
             }
-            if(currentNode.pos.Y != currentNode.fromPos.Y){
+            if(currentNode.from!=null && currentNode.pos.Y != currentNode.from.pos.Y){
                 canMoveVertical = false;
             }
         }
 
-        if(canMoveHorizontal && currentNode.pos.X -1 >= 0 && currentNode.pos.X-currentNode.fromPos.X!=1){
+        int X = currentNode.pos.X;
+        int Y = currentNode.pos.Y;
+        int newX;
+        int newY;
+        if(canMoveHorizontal && currentNode.pos.X -1 >= 0 && (currentNode.from==null || currentNode.pos.X-currentNode.from.pos.X!=1)){
             //Left
-            neighboursList.Add(GetNode(new Point(currentNode.pos.X-1,currentNode.pos.Y),currentNode.pos));
+            newX = X-1;
+            newY = Y;
+            Node leftNeighbour = new Node(new Point(newX,newY),int.MaxValue,(weightedMap.Count-1)-newY+(weightedMap[0].Count-1)-newX,weightedMap[newY][newX],"<");
+            leftNeighbour.nbBeforeTurn = SameLine(leftNeighbour,currentNode.from)?currentNode.nbBeforeTurn-1:2;
+            leftNeighbour.gCost = currentNode.gCost+leftNeighbour.weight;
+            leftNeighbour.from = currentNode;
+            leftNeighbour.fromPos = currentNode.pos;
+            neighboursList.Add(leftNeighbour);
         }
-        if(canMoveHorizontal && currentNode.pos.X+1 < nodeMap[0].Count && currentNode.pos.X-currentNode.fromPos.X!=-1){
+        if(canMoveHorizontal && currentNode.pos.X+1 < weightedMap[0].Count && (currentNode.from==null || currentNode.pos.X-currentNode.from.pos.X!=-1)){
             //Right
-            neighboursList.Add(GetNode(new Point(currentNode.pos.X+1,currentNode.pos.Y),currentNode.pos));
+            newX = X+1;
+            newY = Y;
+            Node rightNeighbour = new Node(new Point(newX,newY),int.MaxValue,(weightedMap.Count-1)-newY+(weightedMap[0].Count-1)-newX,weightedMap[newY][newX],">");
+            rightNeighbour.nbBeforeTurn = SameLine(rightNeighbour,currentNode.from)?currentNode.nbBeforeTurn-1:2;
+            rightNeighbour.gCost = currentNode.gCost+rightNeighbour.weight;
+            rightNeighbour.from = currentNode;
+            rightNeighbour.fromPos = currentNode.pos;
+            neighboursList.Add(rightNeighbour);
         }
-        if(canMoveVertical && currentNode.pos.Y -1 >= 0 && currentNode.pos.Y-currentNode.fromPos.Y!=1){
+        if(canMoveVertical && currentNode.pos.Y -1 >= 0 && (currentNode.from==null || currentNode.pos.Y-currentNode.from.pos.Y!=1)){
             //Up
-            neighboursList.Add(GetNode(new Point(currentNode.pos.X,currentNode.pos.Y-1),currentNode.pos));
+            newX = X;
+            newY = Y-1;
+            Node upNeighbour = new Node(new Point(newX,newY),int.MaxValue,(weightedMap.Count-1)-newY+(weightedMap[0].Count-1)-newX,weightedMap[newY][newX],"^");
+            upNeighbour.nbBeforeTurn = SameLine(upNeighbour,currentNode.from)?currentNode.nbBeforeTurn-1:2;
+            upNeighbour.gCost = currentNode.gCost+upNeighbour.weight;
+            upNeighbour.from = currentNode;
+            upNeighbour.fromPos = currentNode.pos;
+            neighboursList.Add(upNeighbour);
         }
-        if(canMoveVertical && currentNode.pos.Y+1 < nodeMap.Count && currentNode.pos.Y-currentNode.fromPos.Y!=-1){
+        if(canMoveVertical && currentNode.pos.Y+1 < weightedMap.Count && (currentNode.from==null || currentNode.pos.Y-currentNode.from.pos.Y!=-1)){
             //Down
-            neighboursList.Add(GetNode(new Point(currentNode.pos.X,currentNode.pos.Y+1),currentNode.pos));
+            newX = X;
+            newY = Y+1;
+            Node downNeighbour = new Node(new Point(newX,newY),int.MaxValue,(weightedMap.Count-1)-newY+(weightedMap[0].Count-1)-newX,weightedMap[newY][newX],"v");
+            downNeighbour.nbBeforeTurn = SameLine(downNeighbour,currentNode.from)?currentNode.nbBeforeTurn-1:2;
+            downNeighbour.gCost = currentNode.gCost+downNeighbour.weight;
+            downNeighbour.from = currentNode;
+            downNeighbour.fromPos = currentNode.pos;
+            neighboursList.Add(downNeighbour);
         }
 
         return neighboursList;
@@ -105,8 +131,26 @@ class Program
         return (neighbourNode.pos.X==previousNode.pos.X) || (neighbourNode.pos.Y==previousNode.pos.Y);
     }
 
+    /*
+    //SLOOOOOOOOOOOW as hell.
+    //Even though part 1 is slow without this
+    static int IndexNodeInsideList(Node node, List<Node> list){
+        if(node != null){
+            for(int i=0; i<list.Count;i++){
+                Node listNode = list[i];
+                if(listNode.pos==node.pos){
+                    ;
+                }
+                if(node.Equals(listNode)){
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+    */
 
-    static List<Node> FindPath(Node startNode, List<Node> endNodes){
+    static List<Node> FindPath(Node startNode, Point endPos){
         List<Node> openedList = new List<Node>{startNode};
         List<Node> closedList = new List<Node>();
 
@@ -114,21 +158,24 @@ class Program
 
         while(openedList.Count > 0){
             Node currentNode = GetLowestFCostNode(openedList);
+            /*
+            Point fromPos = currentNode.from==null?new Point(-1,-1):currentNode.from.pos;
             string logLine = string.Format("Checking node at ({0},{1}), coming from ({4},{5}), with a heat loss of {2}. (Own heat loss is {3}, nb of jumps in same dir: {6})", 
-            currentNode.pos.X, currentNode.pos.Y, currentNode.gCost, currentNode.weight,currentNode.fromPos.X, currentNode.fromPos.Y, currentNode.nbBeforeTurn);
+            currentNode.pos.X, currentNode.pos.Y, currentNode.gCost, currentNode.weight,fromPos.X, fromPos.Y, currentNode.nbBeforeTurn);
             Console.WriteLine(logLine);
             LogInOutput(logLine);
-            if(endNodes.Contains(currentNode)){
+            */
+            if(endPos == currentNode.pos){
                 //Found the end, get the full path.
-                Console.WriteLine("Is end node !!");
-                Console.WriteLine("");
+                //Console.WriteLine("Is end node !!");
+                //Console.WriteLine("");
                 List<Node> path = new List<Node>{currentNode};
                 Node pathNode = currentNode;
-                while(pathNode.fromNode != null)
+                while(pathNode.from != null)
                 {
-                    path.Add(pathNode.fromNode);
-                    pathNode = pathNode.fromNode;
-                    Console.WriteLine("Previous node at {0},{1}, with a heat loss of {2}. (Own heat loss is {3})", pathNode.pos.X, pathNode.pos.Y, pathNode.gCost, pathNode.weight);
+                    path.Add(pathNode.from);
+                    pathNode = pathNode.from;
+                    //Console.WriteLine("Previous node at {0},{1}, with a heat loss of {2}. (Own heat loss is {3})", pathNode.pos.X, pathNode.pos.Y, pathNode.gCost, pathNode.weight);
                 }
                 path.Reverse();
                 return path;
@@ -141,15 +188,8 @@ class Program
                 if(closedList.Contains(neighbourNode)){
                     continue;
                 }
-                int potentialGCost = currentNode.gCost + neighbourNode.weight;
-                int potentialNbBeforeTurn = SameLine(neighbourNode,currentNode.fromNode)?currentNode.nbBeforeTurn-1:2;
-                if(potentialGCost < neighbourNode.gCost || (potentialGCost==neighbourNode.gCost && potentialNbBeforeTurn > neighbourNode.nbBeforeTurn)){
-                    neighbourNode.fromNode = currentNode;
-                    neighbourNode.gCost = potentialGCost;
-                    neighbourNode.nbBeforeTurn = potentialNbBeforeTurn;
-                    if(!openedList.Contains(neighbourNode)){
-                        openedList.Add(neighbourNode);
-                    }
+                if(!openedList.Contains(neighbourNode)){
+                    openedList.Add(neighbourNode);
                 }
             }
         }
@@ -159,10 +199,9 @@ class Program
     }
 
     static List<Node> FindPath(Point startPos, Point endPos){
-        Node startNode = GetNode(startPos,new Point(-1,-1));
-        List<Node> endNodes = nodeMap[endPos.Y][endPos.X];
+        Node startNode = new Node(startPos,int.MaxValue,(weightedMap.Count-1)+(weightedMap[0].Count-1),weightedMap[0][0],weightedMap[0][0].ToString());
 
-        return FindPath(startNode,endNodes);
+        return FindPath(startNode,endPos);
     }
 
     static List<Point> GetPointsFromPath(List<Node> path)
@@ -213,34 +252,8 @@ class Program
                 Console.WriteLine("");
             }
             */
-
-            for(int i = 0 ; i < weightedMap.Count; i++){
-                List<List<Node>> nodeLine = new List<List<Node>>();
-                for(int j = 0 ; j < weightedMap[i].Count; j++){
-                    List<Node> nodesAtPoint = new List<Node>();
-                    if(i==0 && j==0){
-                        //Start Node, with theoric previous node at -1,-1
-                        nodesAtPoint.Add(new Node(new Point(j,i),int.MaxValue,weightedMap.Count-i+weightedMap[i].Count-j-2,weightedMap[i][j],new Point(-1,-1),weightedMap[0][0].ToString()));
-                    }
-                    if(i-1>=0){
-                        nodesAtPoint.Add(new Node(new Point(j,i),int.MaxValue,weightedMap.Count-i+weightedMap[i].Count-j-2,weightedMap[i][j],new Point(j,i-1),"v"));
-                    }
-                    if(i+1<weightedMap.Count){
-                        nodesAtPoint.Add(new Node(new Point(j,i),int.MaxValue,weightedMap.Count-i+weightedMap[i].Count-j-2,weightedMap[i][j],new Point(j,i+1),"^"));
-                    }
-                    if(j-1>=0){
-                        nodesAtPoint.Add(new Node(new Point(j,i),int.MaxValue,weightedMap.Count-i+weightedMap[i].Count-j-2,weightedMap[i][j],new Point(j-1,i),">"));
-                    }   
-                    if(j+1<weightedMap[i].Count){
-                        nodesAtPoint.Add(new Node(new Point(j,i),int.MaxValue,weightedMap.Count-i+weightedMap[i].Count-j-2,weightedMap[i][j],new Point(j+1,i),"<"));
-                    }
-                    nodeLine.Add(nodesAtPoint);
-                }
-                nodeMap.Add(nodeLine);
-            }
             
-            Console.WriteLine("");
-
+            //Console.WriteLine("");
             //Get full path
             List<Node> path = FindPath(new Point(0,0), new Point(weightedMap[0].Count-1,weightedMap.Count-1));
             result1 = path[path.Count-1].gCost;
@@ -248,6 +261,7 @@ class Program
             Console.WriteLine("");
             Console.WriteLine("End of input. Result game 1 found: {0}",result1);
 
+            /*
             //DEBUG LOG
             foreach(Node node in path){
                 Console.WriteLine("We are at {0},{1}, with a heat loss of {2}. (Own heat loss is {3})", node.pos.X, node.pos.Y, node.gCost, node.weight);
@@ -268,6 +282,7 @@ class Program
                 }
                 Console.WriteLine("");
             }
+            */
 
         }
         catch(Exception e)
