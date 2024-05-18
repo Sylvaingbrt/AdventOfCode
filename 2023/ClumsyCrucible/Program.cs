@@ -5,7 +5,6 @@ using System.Drawing;
 
 public class Node : IEquatable<Node>
 {
-    //We use Node here as a class and not a struct to check for null nodes
     public Point pos;
     public int gCost;
     public int hCost;
@@ -38,59 +37,11 @@ public class Node : IEquatable<Node>
         return false;
     }
 
-    /*
-    public int Compare(Node aNode, Node other){
-        return aNode.GetFCost().CompareTo(other.GetFCost());
-    }
-
-    public bool Equals(Node? aNode, Node? otherNode)
-    {
-        if(aNode!=null && otherNode != null){
-            return aNode.pos==otherNode.pos && aNode.nbMaxBeforeTurn==otherNode.nbMaxBeforeTurn && aNode.fromPos==otherNode.fromPos;
-        }
-        return false;
-    }
-    */  
     public int CompareTo(Node other)
     {
         return GetFCost().CompareTo(other.GetFCost());
     }
 }
-/*
-public class Node : IEquatable<Node>, IComparable<Node>
-{
-    public Point pos;
-    public int gCost;
-    public int hCost;
-    public int weight;
-    public int nbMaxBeforeTurn;
-    public Node from = null;
-    public Point fromPos = new Point(-1, -1);
-    public string ch;
-    public int nbMinBeforeTurn;
-
-    public int GetFCost() => gCost + hCost;
-
-    public Node(Point p, int g, int h, int w, string c, int max, int min)
-    {
-        pos = p;
-        gCost = g;
-        hCost = h;
-        weight = w;
-        ch = c;
-        nbMaxBeforeTurn = max;
-        nbMinBeforeTurn = min;
-    }
-
-    public bool Equals(Node otherNode) =>
-        otherNode != null &&
-        pos == otherNode.pos &&
-        nbMaxBeforeTurn == otherNode.nbMaxBeforeTurn &&
-        fromPos == otherNode.fromPos;
-
-    public int CompareTo(Node other) => GetFCost().CompareTo(other.GetFCost());
-}
-*/
 
 
 class Program
@@ -167,7 +118,7 @@ class Program
             maxTurn = nbMaxBeforeTurnUpgraded;
             minTurn = nbMinBeforeTurnUpgraded;
         }
-        int move;
+        int move = 1;
         int nbminBTurn = 0;
         List<string> movesDir = new List<string>();
         if(canMoveHorizontal){
@@ -190,16 +141,18 @@ class Program
             Point p = neighbourPos[i];
             newX = p.X;
             newY = p.Y;
+            /*
             if(newX==currentNode.pos.X){
                 move = Math.Abs(newY-currentNode.pos.Y);
             }
             else{
                 move = Math.Abs(newX-currentNode.pos.X);
             }
+            */
             if(InBound(newX,newY) && (currentNode.from==null || !SameDir(currentNode.pos,currentNode.from.pos,p))){
                 Node neighbourNode = new Node(new Point(newX,newY),int.MaxValue,(weightedMap.Count-1)-newY+(weightedMap[0].Count-1)-newX,weightedMap[newY][newX],movesDir[i],maxTurn,minTurn);
                 neighbourNode.nbMaxBeforeTurn = SameLine(neighbourNode,currentNode.from)?currentNode.nbMaxBeforeTurn-move:maxTurn;
-                neighbourNode.nbMinBeforeTurn = SameLine(neighbourNode,currentNode.from)?Math.Max(currentNode.nbMinBeforeTurn-1,0):minTurn;//nbminBTurn;//Math.Max(currentNode.nbMinBeforeTurn-1,0);
+                neighbourNode.nbMinBeforeTurn = 0;//SameLine(neighbourNode,currentNode.from)?Math.Max(currentNode.nbMinBeforeTurn-1,0):minTurn;//nbminBTurn;//Math.Max(currentNode.nbMinBeforeTurn-1,0);
                 neighbourNode.gCost = currentNode.gCost+neighbourNode.weight;//SumWeights(currentNode.pos, p);//neighbourNode.weight;
                 neighbourNode.from = currentNode;
                 neighbourNode.fromPos = currentNode.pos;//new Point(newX + Math.Sign(X-newX),newY + Math.Sign(Y-newY));
@@ -232,25 +185,6 @@ class Program
 
         return (neighbourNode.pos.X==previousNode.pos.X) || (neighbourNode.pos.Y==previousNode.pos.Y);
     }
-
-    /*
-    //SLOOOOOOOOOOOW as hell.
-    //Even though part 1 is already slow without this
-    static int IndexNodeInsideList(Node node, List<Node> list){
-        if(node != null){
-            for(int i=0; i<list.Count;i++){
-                Node listNode = list[i];
-                if(listNode.pos==node.pos){
-                    ;
-                }
-                if(node.Equals(listNode)){
-                    return i;
-                }
-            }
-        }
-        return -1;
-    }
-    */
 
     static List<Node> FindPath(Node startNode, Point endPos, bool upgraded){
         //SortedSet<Node> openedList = new SortedSet<Node>{startNode};
