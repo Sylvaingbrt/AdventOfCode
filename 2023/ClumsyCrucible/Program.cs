@@ -1,10 +1,9 @@
 ﻿//IT'S FINALLY TIME TO USE A* ALGORITHM! (Wait is it Dijkstra in the end?)
 //Classic but never disappoint.
 
-using System.ComponentModel.Design;
 using System.Drawing;
-/*
-public class Node : IEquatable<Node>, IComparer<Node>
+
+public class Node : IEquatable<Node>
 {
     //We use Node here as a class and not a struct to check for null nodes
     public Point pos;
@@ -38,6 +37,8 @@ public class Node : IEquatable<Node>, IComparer<Node>
         }
         return false;
     }
+
+    /*
     public int Compare(Node aNode, Node other){
         return aNode.GetFCost().CompareTo(other.GetFCost());
     }
@@ -49,27 +50,13 @@ public class Node : IEquatable<Node>, IComparer<Node>
         }
         return false;
     }
-
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            var hashCode = pos.X;
-            hashCode = ((hashCode*23) ^ pos.Y) + 17;
-            //hashCode = ((hashCode*23) ^ gCost) + 17;
-            hashCode = ((hashCode*23) ^ hCost) + 17;
-            hashCode = ((hashCode*23) ^ weight) + 17;
-            //hashCode = ((hashCode*23) ^ gCost) + 17;
-            return hashCode;
-        }
-    }
-
+    */  
     public int CompareTo(Node other)
     {
         return GetFCost().CompareTo(other.GetFCost());
     }
 }
-*/
+/*
 public class Node : IEquatable<Node>, IComparable<Node>
 {
     public Point pos;
@@ -103,7 +90,7 @@ public class Node : IEquatable<Node>, IComparable<Node>
 
     public int CompareTo(Node other) => GetFCost().CompareTo(other.GetFCost());
 }
-
+*/
 
 
 class Program
@@ -277,7 +264,7 @@ class Program
 
         while(openedList.Count > 0){
             Node currentNode = GetLowestFCostNode(openedList);
-            Tuple<Point,int,Point> keyLookup = Tuple.Create(currentNode.pos,currentNode.nbMaxBeforeTurn,currentNode.fromPos);
+            //Tuple<Point,int,Point> keyLookup = Tuple.Create(currentNode.pos,currentNode.nbMaxBeforeTurn,currentNode.fromPos);
             /*
             Point fromPos = currentNode.from==null?new Point(-1,-1):currentNode.from.pos;
             string logLine = string.Format("Checking node at ({0},{1}), coming from ({4},{5}), with a heat loss of {2}. (Own heat loss is {3}, nb of jumps in same dir: max={6}, min={7})", 
@@ -315,8 +302,9 @@ class Program
                 {
                     openedList.Add(neighbourNode);
                     openSetLookup[neighbourKeyLookup] = neighbourNode;
-                }
-                */
+                }*/
+                
+                
                 if(!openedList.Contains(neighbourNode)){
                     openedList.Add(neighbourNode);
                 }
@@ -327,70 +315,7 @@ class Program
         //No more nodes in opened list and no path found...
         return null;
     }
-/*
-    static List<Node> FindPathIA(Node startNode, Point endPos, bool upgraded)
-    {
-        var openedList = new SortedSet<Node>();
-        var closedSet = new HashSet<Node>();
-        var openSetLookup = new Dictionary<Point, Node>();
 
-        startNode.gCost = 0;
-        openedList.Add(startNode);
-        openSetLookup[startNode.pos] = startNode;
-
-        
-
-        while (openedList.Count > 0)
-        {
-            Node currentNode = openedList.Min;
-            openedList.Remove(currentNode);
-            openSetLookup.Remove(currentNode.pos);
-            closedSet.Add(currentNode);
-
-            Point fromPos = currentNode.from==null?new Point(-1,-1):currentNode.from.pos;
-            string logLine = string.Format("Checking node at ({0},{1}), coming from ({4},{5}), with a heat loss of {2}. (Own heat loss is {3}, nb of jumps in same dir: max={6}, min={7})", 
-            currentNode.pos.X, currentNode.pos.Y, currentNode.gCost, currentNode.weight,fromPos.X, fromPos.Y, currentNode.nbMaxBeforeTurn,currentNode.nbMinBeforeTurn);
-            Console.WriteLine(logLine);
-
-            if (endPos == currentNode.pos)
-            {
-                List<Node> path = new List<Node> { currentNode };
-                Node pathNode = currentNode;
-                while (pathNode.from != null)
-                {
-                    path.Add(pathNode.from);
-                    pathNode = pathNode.from;
-                }
-                path.Reverse();
-                return path;
-            }
-
-            foreach (Node neighbourNode in GetNeighboursList(currentNode, upgraded))
-            {
-                if (closedSet.Contains(neighbourNode))
-                    continue;
-
-                if (!openSetLookup.ContainsKey(neighbourNode.pos))
-                {
-                    openedList.Add(neighbourNode);
-                    openSetLookup[neighbourNode.pos] = neighbourNode;
-                }
-                else
-                {
-                    var existingNode = openSetLookup[neighbourNode.pos];
-                    if (neighbourNode.gCost < existingNode.gCost)
-                    {
-                        openedList.Remove(existingNode);
-                        openedList.Add(neighbourNode);
-                        openSetLookup[neighbourNode.pos] = neighbourNode;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-*/
     static List<Node> FindPath(Point startPos, Point endPos, bool upgraded){
         int maxTurn = nbMaxBeforeTurnBase;
         int minTurn = nbMinBeforeTurnBase;
@@ -416,8 +341,11 @@ class Program
     static void Main(string[] args){
         try
         {
+            //To get the time of code execution!
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
             //Pass the file path and file name to the StreamReader constructor
-            StreamReader sr = new StreamReader(Directory.GetCurrentDirectory()+"\\..\\..\\..\\TestInput.txt");
+            StreamReader sr = new StreamReader(Directory.GetCurrentDirectory()+"\\..\\..\\..\\Input.txt");
 
             //Read the first line of text
             line = sr.ReadLine();
@@ -466,7 +394,7 @@ class Program
             Console.WriteLine("");
             Console.WriteLine("End of input. Result game 1 found: {0}",result);
             
-            
+            /*
             //PART 2
             //Get full path
             List<Node> path2 = FindPath(new Point(0,0), new Point(weightedMap[0].Count-1,weightedMap.Count-1),true);
@@ -476,21 +404,21 @@ class Program
 
             Console.WriteLine("");
             Console.WriteLine("End of input. Result game 2 found: {0}",result);
-            
+            */
             /*
             //DEBUG LOG
             //foreach(Node node in path2){
             //    Console.WriteLine("We are at {0},{1}, with a heat loss of {2}. (Own heat loss is {3})", node.pos.X, node.pos.Y, node.gCost, node.weight);
             //}
             Console.WriteLine("");
-            List<Point> pathPoints = GetPointsFromPath(path2);
+            List<Point> pathPoints = GetPointsFromPath(path1);
             Console.WriteLine("Path Map");
             for(int i=0; i<weightedMap.Count;i++){
                 List<int> wLine = weightedMap[i];
                 for(int j=0; j<wLine.Count; j++){
                     int indx = pathPoints.IndexOf(new Point(j,i));
                     if(indx>=0){
-                        Console.Write(path2[indx].ch);
+                        Console.Write(path1[indx].ch);
                     }
                     else{
                         Console.Write(wLine[j]);
@@ -499,6 +427,12 @@ class Program
                 Console.WriteLine("");
             }
             */
+
+            
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+            Console.WriteLine();
+            Console.WriteLine("Time of execution: {0} milliseconds",elapsedMs);
 
         }
         catch(Exception e)
