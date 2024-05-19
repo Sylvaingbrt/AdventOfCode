@@ -16,6 +16,10 @@ int minSizeX = 0;
 int minSizeY = 0;
 int chainSize = 0;
 
+//For part 2
+Color digColor= Color.Black;
+List<Tuple<char,int>> correctedInstructions = new List<Tuple<char,int>>();
+Dictionary<Point,Color> mapCorrected = new Dictionary<Point,Color>();
 
 Tuple<char, int, Color> ConvertInstruction(string input)
 {
@@ -26,16 +30,25 @@ Tuple<char, int, Color> ConvertInstruction(string input)
     return result;
 }
 
-void LookAtTile(Point pos){
+void FillPosAndGetNextPos(ref List<Point> posToFill){
+    Point pos = posToFill[0];
+    posToFill.Remove(pos);
     if(!map.ContainsKey(pos)){
         map[pos] = fillColor;
         if(pos.X==minSizeX || pos.X==mapSizeX || pos.Y==minSizeY || pos.Y==mapSizeY){
             outside = true;
         }
-        LookAtTile(new Point(Math.Max(pos.X-1,minSizeX),pos.Y));
-        LookAtTile(new Point(Math.Min(pos.X+1,mapSizeX),pos.Y));
-        LookAtTile(new Point(pos.X,Math.Max(pos.Y-1,minSizeY)));
-        LookAtTile(new Point(pos.X,Math.Min(pos.Y+1,mapSizeY)));
+        Point[] newPoints = new Point[]{
+            new Point(Math.Max(pos.X-1,minSizeX),pos.Y),
+            new Point(Math.Min(pos.X+1,mapSizeX),pos.Y),
+            new Point(pos.X,Math.Max(pos.Y-1,minSizeY)),
+            new Point(pos.X,Math.Min(pos.Y+1,mapSizeY))
+            };
+        foreach(Point newPos in newPoints){
+            if(!posToFill.Contains(newPos)){
+                posToFill.Add(newPos);
+            }
+        }
     }
 }
 
@@ -69,7 +82,7 @@ try
 
     //Draw map:
     Point currentPoint = new Point(0,0);
-    Color digColor = instructions[0].Item3;
+    //Color digColor = instructions[0].Item3; //Not used for part 1, wrong for part 2
     map[currentPoint] = digColor;
     Point direction = new Point(0,0);
     for(int i=0; i<instructions.Count; i++){
@@ -169,7 +182,10 @@ try
             currentPoint.Y+=direction.Y;
             Point lookPos = new Point(currentPoint.X + lookoutDir.X,currentPoint.Y + lookoutDir.Y); //MAX AND MIN NECESSARY
             //Console.WriteLine("At point ({0},{1}) we look at point ({2},{3}) | Dir: {4}, lookoutDir: {5},{6}", currentPoint.X,currentPoint.Y,lookPos.X,lookPos.Y,instruction.Item1, lookoutDir.X,lookoutDir.Y);
-            LookAtTile(lookPos);
+            List<Point> posToFill = new List<Point>{lookPos};
+            while(posToFill.Count!=0){
+                FillPosAndGetNextPos(ref posToFill);
+            }
         }
     }
 
@@ -213,6 +229,9 @@ try
     //PART 1
     Console.WriteLine("");
     Console.WriteLine("End of input. Result game 1 found: {0}",result);
+
+
+    //PART 2
 
 
     
