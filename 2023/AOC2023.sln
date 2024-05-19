@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheFloorWillBeLava", "TheFl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClumsyCrucible", "ClumsyCrucible\ClumsyCrucible.csproj", "{4589A04C-B710-4515-9CF0-A671B013D959}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LavaductLagoon", "LavaductLagoon\LavaductLagoon.csproj", "{45947912-7577-42E8-A469-25B21F320B77}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -118,5 +120,9 @@ Global
 		{4589A04C-B710-4515-9CF0-A671B013D959}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4589A04C-B710-4515-9CF0-A671B013D959}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4589A04C-B710-4515-9CF0-A671B013D959}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45947912-7577-42E8-A469-25B21F320B77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45947912-7577-42E8-A469-25B21F320B77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45947912-7577-42E8-A469-25B21F320B77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45947912-7577-42E8-A469-25B21F320B77}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
