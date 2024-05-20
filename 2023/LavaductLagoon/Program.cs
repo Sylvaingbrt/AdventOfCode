@@ -20,8 +20,10 @@ double chainSize = 0;
 Color digColor= Color.Black;
 List<Tuple<char,int>> correctedInstructions = new List<Tuple<char,int>>();
 Dictionary<Point,Color> mapCorrected = new Dictionary<Point,Color>();
-List<List<int>> leftBorders = new List<List<int>>();
-List<List<int>> rightBorders = new List<List<int>>();
+Dictionary<int,List<int>> leftBorders = new Dictionary<int,List<int>>();
+Dictionary<int,List<int>> rightBorders = new Dictionary<int,List<int>>();
+HashSet<int> leftKeys = new HashSet<int>();
+HashSet<int> rightKeys = new HashSet<int>();
 
 Tuple<char, int> ConvertInstruction(string input, bool corrected = false)
 {
@@ -64,17 +66,21 @@ void FillPosAndGetNextPos(ref List<Point> posToFill, Dictionary<Point,Color> map
     }
 }
 
-void AddBorder(ref List<List<int>> bordersList, int column, int row){
-    while(column<=0){
-        List<int> borders = new List<int>();
-        bordersList.Insert(0, borders);
-        column++;
+void AddBorder(ref Dictionary<int,List<int>> bordersList, int column, int row, ref HashSet<int> keys){
+    if(!keys.Contains(column)){
+        List<int> borders = new List<int>{row};
+        bordersList[column] = borders;
+        if(!keys.Add(column)){
+            Console.WriteLine("Rewrite possible at column "+column);
+        }
     }
-    while(column>=bordersList.Count){
-        List<int> borders = new List<int>();
-        bordersList.Add(borders);
+    else{
+        if(column==-46){
+
+        }
+        bordersList[column].Add(row);
     }
-    bordersList[column].Add(row);
+    
 }
 
 void DrawMap(List<Tuple<char,int>> instructionsToFollow, Dictionary<Point,Color> mapToDraw, bool keepTrackOfBorders){
@@ -90,8 +96,10 @@ void DrawMap(List<Tuple<char,int>> instructionsToFollow, Dictionary<Point,Color>
     bool addToBorder = false;
     bool addEvenFirstToBorder = false;
     if(keepTrackOfBorders){
-        leftBorders = new List<List<int>>();
-        rightBorders = new List<List<int>>();
+        leftBorders = new Dictionary<int, List<int>>();
+        rightBorders = new Dictionary<int, List<int>>();
+        leftKeys = new HashSet<int>();
+        rightKeys = new HashSet<int>();
     }
     for(int i=0; i<instructionsToFollow.Count; i++){
         addToBorder = false;
@@ -141,14 +149,14 @@ void DrawMap(List<Tuple<char,int>> instructionsToFollow, Dictionary<Point,Color>
             if(addToBorder){
                 if(dirToConsider=='U'){
                     //Console.WriteLine("Add left Border : ({0},{1})", currentPoint.X,currentPoint.Y-minSizeY);
-                    AddBorder(ref leftBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                    AddBorder(ref leftBorders,currentPoint.Y,currentPoint.X,ref leftKeys);
                 }
                 else{
                     //Console.WriteLine("Add right Border : ({0},{1})", currentPoint.X,currentPoint.Y-minSizeY);
-                    AddBorder(ref rightBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                    AddBorder(ref rightBorders,currentPoint.Y,currentPoint.X,ref rightKeys);
                 }   
             }
-            addToBorder = instruction.Item1=='U' || instruction.Item1=='D';
+            addToBorder = keepTrackOfBorders && (instruction.Item1=='U' || instruction.Item1=='D');
             dirToConsider = instruction.Item1;
 
             currentPoint.X+=direction.X;
@@ -240,11 +248,13 @@ double GetBordersAndChainSize(List<Tuple<char,int>> instructionsToFollow){
     mapSizeY = -1;
     minSizeX = 0;
     minSizeY = 0;
-    char prevDir = 'N';
+    char prevDir = instructionsToFollow[instructionsToFollow.Count-1].Item1;
     char dirToConsider = prevDir;
     bool addToBorder = false;
-    leftBorders = new List<List<int>>();
-    rightBorders = new List<List<int>>();
+    leftBorders = new Dictionary<int, List<int>>();
+    rightBorders = new Dictionary<int, List<int>>();
+    leftKeys = new HashSet<int>();
+    rightKeys = new HashSet<int>();
     for(int i=0; i<instructionsToFollow.Count; i++){
         addToBorder = false;
         var instruction = instructionsToFollow[i];
@@ -293,11 +303,11 @@ double GetBordersAndChainSize(List<Tuple<char,int>> instructionsToFollow){
                 if(addToBorder){
                     if(dirToConsider=='U'){
                         //Console.WriteLine("Add left Border : ({0},{1}), current min: {2}", currentPoint.X,currentPoint.Y,minSizeY);
-                        AddBorder(ref leftBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                        AddBorder(ref leftBorders,currentPoint.Y,currentPoint.X,ref leftKeys);
                     }
                     else{
                         //Console.WriteLine("Add right Border : ({0},{1}), current min: {2}", currentPoint.X,currentPoint.Y,minSizeY);
-                        AddBorder(ref rightBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                        AddBorder(ref rightBorders,currentPoint.Y,currentPoint.X,ref rightKeys);
                     }   
                 }
                 addToBorder = instruction.Item1=='U' || instruction.Item1=='D';
@@ -328,11 +338,11 @@ double GetBordersAndChainSize(List<Tuple<char,int>> instructionsToFollow){
             if(addToBorder){
                 if(dirToConsider=='U'){
                     //Console.WriteLine("Add left Border : ({0},{1}), current min: {2}", currentPoint.X,currentPoint.Y,minSizeY);
-                    AddBorder(ref leftBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                    AddBorder(ref leftBorders,currentPoint.Y,currentPoint.X,ref leftKeys);
                 }
                 else{
                     //Console.WriteLine("Add right Border : ({0},{1}), current min: {2}", currentPoint.X,currentPoint.Y,minSizeY);
-                    AddBorder(ref rightBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                    AddBorder(ref rightBorders,currentPoint.Y,currentPoint.X,ref rightKeys);
                 }   
             }
             currentPoint.X+=instruction.Item2*direction.X;
@@ -379,6 +389,7 @@ try
     chainSize = map.Count;
 
     //We go through all instructions again, looking at a side of our path, and fill empty spaces. It is the same logic as day 10 probelm.
+    
     FillMap(instructions, map);
 
     if(outside){
@@ -386,9 +397,10 @@ try
     }
     else{
         result = map.Count;
+        Console.WriteLine("Inside size: {0}, chain size {1}",map.Count-chainSize,chainSize);
     }
     
-
+    
 
 
 /*
@@ -417,8 +429,8 @@ try
     }
     LogInOutput("");
     LogInOutput("");
-
 */
+
     Console.WriteLine();
     Console.WriteLine("End of input. Result game 1 found: {0}",result);
     Console.WriteLine();
@@ -440,14 +452,14 @@ try
 
     chainSize = GetBordersAndChainSize(correctedInstructions);
 
-    for(int i = 0; i < leftBorders.Count; i++){
-        leftBorders[i].Sort();
-        rightBorders[i].Sort();
-        Console.WriteLine("At ligne {0}, we have {1} left borders and {2} right borders",i,leftBorders[i].Count,rightBorders[i].Count);
-        
-        for(int j = 0; j < leftBorders[i].Count; j++){
-            int bordRight = Math.Max(leftBorders[i][j],rightBorders[i][j]);
-            int bordLeft = Math.Min(leftBorders[i][j],rightBorders[i][j]);
+    //for(int i = 0; i < leftBorders.Count; i++){
+    foreach(var element in leftBorders){
+        leftBorders[element.Key].Sort();
+        rightBorders[element.Key].Sort();
+        //Console.WriteLine("At ligne {0}, we have {1} left borders and {2} right borders",element.Key,leftBorders[element.Key].Count,rightBorders[element.Key].Count);
+        for(int j = 0; j < element.Value.Count; j++){
+            int bordRight = Math.Max(leftBorders[element.Key][j],rightBorders[element.Key][j]);
+            int bordLeft = Math.Min(leftBorders[element.Key][j],rightBorders[element.Key][j]);
             result+=bordRight-bordLeft-1;
         }
         
