@@ -65,7 +65,7 @@ void FillPosAndGetNextPos(ref List<Point> posToFill, Dictionary<Point,Color> map
 }
 
 void AddBorder(ref List<List<int>> bordersList, int column, int row){
-    while(column<0){
+    while(column<=0){
         List<int> borders = new List<int>();
         bordersList.Insert(0, borders);
         column++;
@@ -170,16 +170,7 @@ void DrawMap(List<Tuple<char,int>> instructionsToFollow, Dictionary<Point,Color>
             if(minSizeY>currentPoint.Y){
                 minSizeY = currentPoint.Y;
             }
-            /*
-            if(addToBorder){
-                if(instruction.Item1=='U'){
-                        AddBorder(ref leftBorders,currentPoint.Y-minSizeY,currentPoint.X);
-                }
-                else{
-                        AddBorder(ref rightBorders,currentPoint.Y-minSizeY,currentPoint.X);
-                }   
-            }
-            */
+
             if(mapToDraw.ContainsKey(currentPoint)){
                 Console.WriteLine("Point aleady digged at ({0},{1})", currentPoint.X,currentPoint.Y);
             }
@@ -241,93 +232,116 @@ void FillMap(List<Tuple<char,int>> instructionsToFollow, Dictionary<Point,Color>
     }
 }
 
-double CountMap(List<Tuple<char,int>> instructionsToFollow, Dictionary<Point,Color> mapToFill){
+double GetBordersAndChainSize(List<Tuple<char,int>> instructionsToFollow){
+    double chainSizeResult = 0;
     Point currentPoint = new Point(0,0);
     Point direction = new Point(0,0);
-    Point lookoutDir = new Point(0,0);
+    mapSizeX = -1;
+    mapSizeY = -1;
+    minSizeX = 0;
+    minSizeY = 0;
     char prevDir = 'N';
-    bool needToCount = true;
-    bool needToCountBeforeMoving = true;
-    List<Point> seenPos = new List<Point>();
-    double result = 0;
+    char dirToConsider = prevDir;
+    bool addToBorder = false;
+    leftBorders = new List<List<int>>();
+    rightBorders = new List<List<int>>();
     for(int i=0; i<instructionsToFollow.Count; i++){
+        addToBorder = false;
         var instruction = instructionsToFollow[i];
         switch(instruction.Item1){
             case 'L':
                 direction.X = -1;
                 direction.Y = 0;
-                lookoutDir.X = 0;
-                lookoutDir.Y = lookLeft?1:-1;
-                if((!lookLeft && prevDir=='D') || (lookLeft && prevDir=='U')){
-                    needToCountBeforeMoving = true;
+                if((!lookLeft && prevDir=='U') || (lookLeft && prevDir=='D')){
+                    addToBorder = true;
+                    dirToConsider = prevDir;
                 }
-                needToCount = false;
                 break;
             case 'R':
                 direction.X = 1;
                 direction.Y = 0;
-                lookoutDir.X = 0;
-                lookoutDir.Y = lookLeft?-1:1;
-                if((!lookLeft && prevDir=='U') || (lookLeft && prevDir=='D')){
-                    needToCountBeforeMoving = true;
+                if((!lookLeft && prevDir=='D') || (lookLeft && prevDir=='U')){
+                    addToBorder = true;
+                    dirToConsider = prevDir;
                 }
-                needToCount = false;
                 break;
             case 'U':
                 direction.X = 0;
                 direction.Y = -1;
-                lookoutDir.X = lookLeft?-1:1;
-                lookoutDir.Y = 0;
-                if((!lookLeft && prevDir=='L') || (lookLeft && prevDir=='R')){
-                    needToCountBeforeMoving = true;
+                //addToBorder = keepTrackOfBorders;
+                if(prevDir=='N' || prevDir=='U' || (!lookLeft && prevDir=='R') || (lookLeft && prevDir=='L')){
+                    addToBorder = true;
+                    dirToConsider = instruction.Item1;
                 }
-                needToCount = true;
                 break;
             case 'D':
                 direction.X = 0;
                 direction.Y = 1;
-                lookoutDir.X = lookLeft?1:-1;
-                lookoutDir.Y = 0;
-                if((!lookLeft && prevDir=='R') || (lookLeft && prevDir=='L')){
-                    needToCountBeforeMoving = true;
+                //addToBorder = keepTrackOfBorders;
+                if(prevDir=='N' || prevDir=='D' || (!lookLeft && prevDir=='L') || (lookLeft && prevDir=='R')){
+                    addToBorder = true;
+                    dirToConsider = instruction.Item1;
                 }
-                needToCount = true;
                 break;
             default:
                 Console.WriteLine("Unknown instruction dir: {0}", instruction.Item1);
                 break;
         }
+        if(instruction.Item1=='U'||instruction.Item1=='D'){
+            for(int j = 0; j < instruction.Item2; j++){
 
-        if(needToCountBeforeMoving && !seenPos.Contains(currentPoint)){
-            needToCountBeforeMoving = false;
-            CountMapAtPos(ref seenPos,mapToFill,currentPoint,ref result,lookoutDir);
-        }
+                if(addToBorder){
+                    if(dirToConsider=='U'){
+                        //Console.WriteLine("Add left Border : ({0},{1}), current min: {2}", currentPoint.X,currentPoint.Y,minSizeY);
+                        AddBorder(ref leftBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                    }
+                    else{
+                        //Console.WriteLine("Add right Border : ({0},{1}), current min: {2}", currentPoint.X,currentPoint.Y,minSizeY);
+                        AddBorder(ref rightBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                    }   
+                }
+                addToBorder = instruction.Item1=='U' || instruction.Item1=='D';
+                dirToConsider = instruction.Item1;
 
-        for(int j = 0; j < instruction.Item2; j++){
-            currentPoint.X+=direction.X;
-            currentPoint.Y+=direction.Y;
-            //Console.WriteLine("At point ({0},{1}) we look at point ({2},{3}) | Dir: {4}, lookoutDir: {5},{6}", currentPoint.X,currentPoint.Y,lookPos.X,lookPos.Y,instruction.Item1, lookoutDir.X,lookoutDir.Y);
-            if(needToCount && !seenPos.Contains(currentPoint)){
-                CountMapAtPos(ref seenPos,mapToFill,currentPoint,ref result,lookoutDir);
+                currentPoint.X+=direction.X;
+                currentPoint.Y+=direction.Y;
+                
+                //Console.WriteLine("Point at : ({0},{1})", currentPoint.X,currentPoint.Y);
+
+                if(mapSizeX<currentPoint.X){
+                    mapSizeX = currentPoint.X;
+                    //Console.WriteLine("New max : {0}", mapSizeX);
+                }
+                if(mapSizeY<currentPoint.Y){
+                    mapSizeY = currentPoint.Y;
+                }
+
+                if(minSizeX>currentPoint.X){
+                    minSizeX = currentPoint.X;
+                }
+                if(minSizeY>currentPoint.Y){
+                    minSizeY = currentPoint.Y;
+                }
             }
         }
-    }
-    return result;
-}
-
-void CountMapAtPos(ref List<Point> seenPos, Dictionary<Point, Color> mapToLook, Point currentPoint, ref double result, Point dir)
-{
-    Point pos = new Point(currentPoint.X+dir.X,currentPoint.Y);
-    seenPos.Add(currentPoint);
-    while(!mapToLook.ContainsKey(pos)){
-        pos.X+=dir.X;
-        if(pos.X==minSizeX || pos.X==mapSizeX){
-            outside = true;
-            return;
+        else{
+            if(addToBorder){
+                if(dirToConsider=='U'){
+                    //Console.WriteLine("Add left Border : ({0},{1}), current min: {2}", currentPoint.X,currentPoint.Y,minSizeY);
+                    AddBorder(ref leftBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                }
+                else{
+                    //Console.WriteLine("Add right Border : ({0},{1}), current min: {2}", currentPoint.X,currentPoint.Y,minSizeY);
+                    AddBorder(ref rightBorders,currentPoint.Y-minSizeY,currentPoint.X);
+                }   
+            }
+            currentPoint.X+=instruction.Item2*direction.X;
         }
-        result++;
+        chainSizeResult += instruction.Item2;
+        prevDir = instruction.Item1;
     }
-    seenPos.Add(pos);
+    //Console.WriteLine("chain size: {0}",chainSizeResult);
+    return chainSizeResult;
 }
 
 try
@@ -403,8 +417,8 @@ try
     }
     LogInOutput("");
     LogInOutput("");
-*/
 
+*/
     Console.WriteLine();
     Console.WriteLine("End of input. Result game 1 found: {0}",result);
     Console.WriteLine();
@@ -422,14 +436,14 @@ try
     */
 
     //Draw map:
-    DrawMap(correctedInstructions, mapCorrected, true);
+    //DrawMap(correctedInstructions, mapCorrected, true);
 
-    chainSize = mapCorrected.Count;
+    chainSize = GetBordersAndChainSize(correctedInstructions);
 
-    for(int i = 0; i < mapSizeY-minSizeY; i++){
+    for(int i = 0; i < leftBorders.Count; i++){
         leftBorders[i].Sort();
         rightBorders[i].Sort();
-        //Console.WriteLine("At ligne {0}, we have {1} left borders and {2} right borders",i,leftBorders[i].Count,rightBorders[i].Count);
+        Console.WriteLine("At ligne {0}, we have {1} left borders and {2} right borders",i,leftBorders[i].Count,rightBorders[i].Count);
         
         for(int j = 0; j < leftBorders[i].Count; j++){
             int bordRight = Math.Max(leftBorders[i][j],rightBorders[i][j]);
