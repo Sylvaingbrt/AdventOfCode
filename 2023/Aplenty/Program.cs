@@ -11,7 +11,6 @@ Dictionary<char,int> categories = new Dictionary<char,int>{
 
 
 //For part 2
-Dictionary<string,List<int[]>> possibleValueForWorkflows = new Dictionary<string,List<int[]>>();
 Dictionary<string,double> possibleCountForWorkflows = new Dictionary<string,double>();
 Dictionary<string,List<List<int[]>>> possibleIntervallsForWorkflows = new Dictionary<string,List<List<int[]>>>();
 
@@ -52,67 +51,6 @@ double ResultFromWorkflows(List<int> part,string workflowKey){
         }
         return ResultFromWorkflows(part,nextKey);
     }
-    //Console.WriteLine("Nothing worked... weird.");
-    //return 0;
-}
-
-List<int[]> RecursiveFindPossibilitiesInWorkflow(string workflowKey){
-    if(!possibleValueForWorkflows.ContainsKey(workflowKey)){
-        List<int[]> possibilities = new List<int[]>{new int[2]{0,4000},new int[2]{0,4000},new int[2]{0,4000},new int[2]{0,4000}};
-        List<Tuple<char,char,int,string>> workflow = workflows[workflowKey];
-        for(int i = workflow.Count-1; i>=0; i--){
-            //We go thorugh rule from last to first to always get the rules that will override the ones we saw before
-            Tuple<char,char,int,string> rule = workflow[i];
-            if(rule.Item4=="R"){
-                if(rule.Item1!='0'){
-                    if(rule.Item2=='>' && possibilities[categories[rule.Item1]][1]>rule.Item3){
-                        possibilities[categories[rule.Item1]][1] = rule.Item3; //Max is reduced
-                    }
-                    else if(rule.Item2=='<' && possibilities[categories[rule.Item1]][0]<rule.Item3-1){
-                        possibilities[categories[rule.Item1]][0] = rule.Item3-1; //Min is augmented
-                    }
-                }
-                else{
-                    //Last rule is rejected...
-                    foreach(int[] pos in possibilities){
-                        pos[0] = 4000;
-                        pos[1] = 0;
-                    }
-                }
-            }
-            else if(rule.Item4=="A"){
-                if(rule.Item1!='0'){
-                    if(rule.Item2=='>'){
-                        possibilities[categories[rule.Item1]][1] = 4000; //Everything above trigg is accepted
-                        if(possibilities[categories[rule.Item1]][0]>rule.Item3){
-                            possibilities[categories[rule.Item1]][0] = rule.Item3;
-                        }
-                    }
-                    else if(rule.Item2=='<'){
-                        possibilities[categories[rule.Item1]][0] = 0; //Everything under trigg is accepted
-                        if(possibilities[categories[rule.Item1]][1]<rule.Item3){
-                            possibilities[categories[rule.Item1]][1] = rule.Item3;
-                        }
-                    }
-                }
-                else{
-                    //Last rule is accepted, since we started with full possibilities, nothing to do.
-                }
-            }
-            else{
-                if(rule.Item1!='0'){
-                    List<int[]> otherPossibilities = RecursiveFindPossibilitiesInWorkflow(rule.Item4);
-
-                }
-                else{
-                    possibilities = RecursiveFindPossibilitiesInWorkflow(rule.Item4);
-                }
-            }
-        }
-
-        possibleValueForWorkflows[workflowKey] = possibilities;
-    }
-    return possibleValueForWorkflows[workflowKey];
 }
 
 double CountPossibilities(List<int[]> input){
@@ -137,7 +75,7 @@ void ResultPossibilities(ref List<int[]> source, List<int[]> constraints){
     }
 }
 
-double RecursiveCountPossibilitiesInWorkflow(string workflowKey){//,List<int[]> possibilities){
+double RecursiveCountPossibilitiesInWorkflow(string workflowKey){
     double result = 0;
     if(!possibleCountForWorkflows.ContainsKey(workflowKey)){
         possibleIntervallsForWorkflows[workflowKey] = new List<List<int[]>>();
@@ -197,8 +135,7 @@ double RecursiveCountPossibilitiesInWorkflow(string workflowKey){//,List<int[]> 
                 List<List<int[]>> otherPossibilities = possibleIntervallsForWorkflows[rule.Item4];
 
                 if(rule.Item1!='0'){
-                    List<int[]> currentPoss = possibilities.Select(o => (int[])o.Clone()).ToList();//new List<int[]>();
-                    //currentPoss.AddRange(possibilities);
+                    List<int[]> currentPoss = possibilities.Select(o => (int[])o.Clone()).ToList(); //Construction to copy the list of complex object, so that when we change the content, it does not change the original object content.
                     
                     /*
                     Console.WriteLine("Possibilities for {0} in rule that goes to {1}: {2}{3}{4}", workflowKey, rule.Item4, rule.Item1,rule.Item2,rule.Item3);
@@ -222,8 +159,7 @@ double RecursiveCountPossibilitiesInWorkflow(string workflowKey){//,List<int[]> 
                             currentPoss[categories[rule.Item1]][1] = rule.Item3-1;
                         }
                     }
-/*
-                    
+                    /*
                     Console.WriteLine("After:");
                     Console.WriteLine("[{0}-{1},{2}-{3},{4}-{5},{6}-{7}]", 
                         currentPoss[0][0],currentPoss[0][1],
@@ -240,7 +176,7 @@ double RecursiveCountPossibilitiesInWorkflow(string workflowKey){//,List<int[]> 
                         possibilities[2][0],possibilities[2][1],
                         possibilities[3][0],possibilities[3][1]
                     );
-*/
+                    */
                     for(int k=0; k<otherPossibilities.Count; k++){
                         List<int[]> otherPossibility = otherPossibilities[k].Select(o => (int[])o.Clone()).ToList();
                         ResultPossibilities(ref otherPossibility,currentPoss);
@@ -256,7 +192,7 @@ double RecursiveCountPossibilitiesInWorkflow(string workflowKey){//,List<int[]> 
                     else if(rule.Item2=='<' && possibilities[categories[rule.Item1]][0]<rule.Item3-1){
                         possibilities[categories[rule.Item1]][0] = rule.Item3-1; //Min is augmented
                     }
-/*
+                    /*
                     Console.WriteLine("After:");
                     Console.WriteLine("[{0}-{1},{2}-{3},{4}-{5},{6}-{7}]", 
                         possibilities[0][0],possibilities[0][1],
@@ -264,7 +200,7 @@ double RecursiveCountPossibilitiesInWorkflow(string workflowKey){//,List<int[]> 
                         possibilities[2][0],possibilities[2][1],
                         possibilities[3][0],possibilities[3][1]
                     );
-*/
+                    */
                     
                     Console.WriteLine();
 
@@ -277,7 +213,6 @@ double RecursiveCountPossibilitiesInWorkflow(string workflowKey){//,List<int[]> 
                         possibleIntervallsForWorkflows[workflowKey].Add(otherPossibility);
                         result += CountPossibilities(otherPossibility);
                     }
-                    //result += RecursiveCountPossibilitiesInWorkflow(rule.Item4);
                 }
             }
         }
@@ -286,7 +221,6 @@ double RecursiveCountPossibilitiesInWorkflow(string workflowKey){//,List<int[]> 
     }
 
     return  possibleCountForWorkflows[workflowKey];
-    //return result;
 }
 
 try
@@ -375,21 +309,6 @@ try
     Console.WriteLine();
 
     //PART 2
-    /*
-    List<int[]> possibleValues = RecursiveFindPossibilitiesInWorkflow("in");
-    result = -1;
-    foreach(var possibleValue in possibleValues){
-        int nbPosForCatg = possibleValue[1]-possibleValue[0];
-        if(nbPosForCatg >= 0){
-            if(result==-1){
-                //At least some possibilities
-                result = 1;
-            }
-            result *= nbPosForCatg;
-        }
-    }
-    result = result==-1?0:result; //If result equals -1 here, that means we never got a categories with possible values, so 0 pieces are accepted
-    */
     result = RecursiveCountPossibilitiesInWorkflow("in");
     Console.WriteLine();
     Console.WriteLine("End of input. Result game 2 found: {0}",result);
