@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-string line;
+﻿string line;
 double lowPulseSent = 0;
 double highPulseSent = 0;
 double result = 0;
@@ -10,7 +8,8 @@ Dictionary<string,List<string>> targets = new Dictionary<string,List<string>>();
 Queue<Tuple<string,bool,string>> pulses = new Queue<Tuple<string,bool,string>>();
 
 //For part 2
-int countOutputLowPulse = 0;
+double loopNb = -1;
+Dictionary<string,double> firstSwitchForRXCount = new Dictionary<string,double>();
 
 //Broadcaster send back to its targets the input it receives.
 //Start by sending a LOW PULSE on broadcaster.
@@ -46,6 +45,15 @@ void ResetState()
         }
     }
 }
+bool AllSwitchCountFound()
+{
+    foreach(var count in firstSwitchForRXCount){
+        if(count.Value==-1){
+            return false; //This switch was never up.
+        }
+    }
+    return true;
+}
 
 void SendLowPulseToBroadcaster(bool countPulses = true){
     //Initialize broadcast
@@ -77,6 +85,10 @@ void SolvePulses(bool countPulses = true)
                 foreach(string target in targets[pulse.Item1]){
                     pulses.Enqueue(new Tuple<string,bool,string>(target,flipFlops[pulse.Item1],pulse.Item1));
                 }
+
+                if(firstSwitchForRXCount.ContainsKey(pulse.Item1) && firstSwitchForRXCount[pulse.Item1]==-1 && flipFlops[pulse.Item1]){
+                    firstSwitchForRXCount[pulse.Item1]=loopNb;
+                }
             }
         }
         else if(conjunctions.ContainsKey(pulse.Item1)){
@@ -93,19 +105,34 @@ void SolvePulses(bool countPulses = true)
             foreach(string target in targets[pulse.Item1]){
                 pulses.Enqueue(new Tuple<string,bool,string>(target,newPulse,pulse.Item1));
             }
+
+            if(newPulse && firstSwitchForRXCount.ContainsKey(pulse.Item1) && firstSwitchForRXCount[pulse.Item1]==-1){
+                firstSwitchForRXCount[pulse.Item1]=loopNb;
+            }
         }
         else{
             //A module that has no targets, can be seen as output? (cf. "more interesting example") -> actually used for part 2. Who knew?
             //Console.WriteLine("{0} received pulse {1}",pulse.Item1,pulse.Item2);
             //needNewLine = true;
-            if(!pulse.Item2){
-                countOutputLowPulse++;
-            }
         }
     }
     if(needNewLine){
         Console.WriteLine();
     }
+}
+
+double LCM(double numA, double numB){
+    //RE-USE FUNCTION FROM DAY 8
+    //We will use the Euclide algorithm. We know that LCM(a,b) = a*b/GCD(a,b) with GCD the greatest common divisor.
+    double a = Math.Max(numA, numB);
+    double b = Math.Min(numA,numB);
+    double c = a%b;
+    while(c!=0){
+        a=b;
+        b=c;
+        c = a%b;
+    }
+    return numA*numB/b;
 }
 
 
@@ -153,10 +180,17 @@ try
 
     //Finish conjuctions links
     foreach(var conjunction in conjunctions){
+
+        bool isOutputPart2 = targets[conjunction.Key].Contains("rx");
+
+
         foreach(var target in targets){
             if(target.Value.Contains(conjunction.Key)){
                 //This module (target.Key) will send something to this conjunction module (conjunction.Key) 
                 conjunction.Value[target.Key] = false; 
+                if(isOutputPart2){
+                    firstSwitchForRXCount[target.Key] = -1;
+                }
             }
         }
     }
@@ -247,13 +281,28 @@ try
     //Console.WriteLine(CheckIfInitialState());
     ResetState();
     //Console.WriteLine(CheckIfInitialState());
-    result = 0;
-    while(countOutputLowPulse!=1){
-        countOutputLowPulse=0;
-        result++;
+
+    loopNb = 0;
+    while(!AllSwitchCountFound()){
+        loopNb++;
         SendLowPulseToBroadcaster(false);
         SolvePulses(false);
     }
+
+    /*
+    //DEBUG LOG
+    Console.WriteLine();
+    foreach(var count in firstSwitchForRXCount){
+        Console.WriteLine("RX needs module {0} that triggers first time at {1}", count.Key, count.Value);
+    }
+    */
+
+    //Re-use function for Day 8 -> LCM
+    result = 1;
+    foreach(var count in firstSwitchForRXCount){
+        result = LCM(result, count.Value);
+    }
+
     Console.WriteLine();
     Console.WriteLine("End of input. Result game 2 found: {0}",result);
 
@@ -271,8 +320,6 @@ finally
 {
     Console.WriteLine("END");
 }
-
-
 
 void LogInOutput(string outLine){
     using (StreamWriter outputFile = new StreamWriter(Directory.GetCurrentDirectory()+"\\..\\..\\..\\DebugLogs.txt", true))
