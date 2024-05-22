@@ -9,6 +9,9 @@ Dictionary<string,Dictionary<string,bool>> conjunctions = new Dictionary<string,
 Dictionary<string,List<string>> targets = new Dictionary<string,List<string>>(); //Send to list the pulse. 
 Queue<Tuple<string,bool,string>> pulses = new Queue<Tuple<string,bool,string>>();
 
+//For part 2
+int countOutputLowPulse = 0;
+
 //Broadcaster send back to its targets the input it receives.
 //Start by sending a LOW PULSE on broadcaster.
 //Pulse are treated in ORDER, treat the pulse, put more pulse if any to queue, and then proceed with next.
@@ -32,23 +35,41 @@ bool CheckIfInitialState()
     return true;
 }
 
-void Sendbroadcast()
+void ResetState()
 {
+    foreach(var flipFlop in flipFlops){
+        flipFlops[flipFlop.Key] = false;
+    }
+    foreach(var conjunction in conjunctions){
+        foreach(var memoryValue in conjunction.Value){
+            conjunctions[conjunction.Key][memoryValue.Key] = false;
+        }
+    }
+}
+
+void SendLowPulseToBroadcaster(bool countPulses = true){
     //Initialize broadcast
-    lowPulseSent++; //First low pulse sent to broadcaster
+    if(countPulses){
+        lowPulseSent++; //First low pulse sent to broadcaster
+    }
     foreach(string target in targets["broadcaster"]){
         pulses.Enqueue(new Tuple<string,bool,string>(target,false,"broadcaster"));
     }
+}
 
+void SolvePulses(bool countPulses = true)
+{
     //Solve pulses course
     bool needNewLine = false;
     while(pulses.Count > 0){
         Tuple<string,bool,string> pulse = pulses.Dequeue();
-        if(pulse.Item2){
-            highPulseSent++;
-        }
-        else{
-            lowPulseSent++;
+        if(countPulses){
+            if(pulse.Item2){
+                highPulseSent++;
+            }
+            else{
+                lowPulseSent++;
+            }
         }
         if(flipFlops.ContainsKey(pulse.Item1)){
             if(!pulse.Item2){
@@ -74,9 +95,12 @@ void Sendbroadcast()
             }
         }
         else{
-            //A module that has no targets, can be seen as output? (cf. "more interesting example")
+            //A module that has no targets, can be seen as output? (cf. "more interesting example") -> actually used for part 2. Who knew?
             //Console.WriteLine("{0} received pulse {1}",pulse.Item1,pulse.Item2);
             //needNewLine = true;
+            if(!pulse.Item2){
+                countOutputLowPulse++;
+            }
         }
     }
     if(needNewLine){
@@ -193,7 +217,8 @@ try
     bool backToInitialState = false;
     while(nbLoop>0 && !backToInitialState){
         //Do the pulse
-        Sendbroadcast();
+        SendLowPulseToBroadcaster();
+        SolvePulses();
         backToInitialState = CheckIfInitialState(); //If we are back to initial state, we can optimize
         nbLoop--;
     }
@@ -203,8 +228,10 @@ try
         lowPulseSent*= fullLoops+1;
         highPulseSent*= fullLoops+1;
         while(nbLoop>0){
+            Console.WriteLine("Loop found after {0} loops", nbLoop); //Actually shows that the given input does not loop while going through all these button pushes.
             //Do the pulse
-            Sendbroadcast();
+            SendLowPulseToBroadcaster();
+            SolvePulses();
             backToInitialState = CheckIfInitialState();
             nbLoop--;
         }
@@ -212,9 +239,23 @@ try
     result = lowPulseSent * highPulseSent;
     Console.WriteLine();
     Console.WriteLine("End of input. Result game 1 found: {0}",result);
-    Console.WriteLine();
 
-    
+
+    //Part 2
+    //Explainations: We can press the button multiple times, and decide to process the Pulses after we finished pressing. How many times do we have to press the button before sending the pulses to get a unique low pulse on rx after everything is processed.
+    //WRONG!!!! -> actually we just need to continue what we did in part 1 (pushing once and wait for pulses to propagate) until we get a signal from rx.
+    //Console.WriteLine(CheckIfInitialState());
+    ResetState();
+    //Console.WriteLine(CheckIfInitialState());
+    result = 0;
+    while(countOutputLowPulse!=1){
+        countOutputLowPulse=0;
+        result++;
+        SendLowPulseToBroadcaster(false);
+        SolvePulses(false);
+    }
+    Console.WriteLine();
+    Console.WriteLine("End of input. Result game 2 found: {0}",result);
 
     watch.Stop();
     var elapsedMs = watch.ElapsedMilliseconds;
@@ -230,6 +271,8 @@ finally
 {
     Console.WriteLine("END");
 }
+
+
 
 void LogInOutput(string outLine){
     using (StreamWriter outputFile = new StreamWriter(Directory.GetCurrentDirectory()+"\\..\\..\\..\\DebugLogs.txt", true))
