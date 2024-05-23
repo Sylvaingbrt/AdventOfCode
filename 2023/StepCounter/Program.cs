@@ -13,7 +13,11 @@ int nbSteps = 64;
 //For part 2
 Point startPos = new Point(0,0);
 int nbSteps2 = 26501365;
-List<Point> fullCoveredMapPoints = new List<Point>();
+List<Point> evenDistancedPoints = new List<Point>();
+List<Point> lastEvenPoints = new List<Point>();
+List<Point> oddDistancedPoints = new List<Point>();
+List<Point> lastOddPoints = new List<Point>();
+long result2 = 0;
 
 bool InBound(Point nPos)
 {
@@ -48,6 +52,39 @@ void MakeAStep(bool infinit = false)
         }
     }
     currentPos = nextPos;
+}
+
+void MakeAStepNew(bool evenStep, bool infinit = false)
+{
+    List<Point> currPos;
+    List<Point> nextPos;
+    if(evenStep){
+        currPos = lastOddPoints;
+        nextPos = evenDistancedPoints;
+        lastEvenPoints.Clear();
+    }
+    else{
+        currPos = lastEvenPoints;
+        nextPos = oddDistancedPoints;
+        lastOddPoints.Clear();
+    }
+    foreach(Point pos in currPos){
+        foreach(Point dir in dirs){
+            Point nPos = new Point(pos.X+dir.X,pos.Y+dir.Y);
+            if((infinit || InBound(nPos)) && !nextPos.Contains(nPos)){
+                Point toLook = GetInBoundEquivalent(nPos,infinit);
+                if(map[toLook]!='#'){
+                    nextPos.Add(nPos);
+                    if(evenStep){
+                        lastEvenPoints.Add(nPos);
+                    }
+                    else{
+                        lastOddPoints.Add(nPos);
+                    }
+                }
+            }
+        }
+    }
 }
 
 bool RightNbOfSteps(int X, int Y, bool evenStepsFromStart, bool evenStartX, bool evenStartY){
@@ -160,7 +197,7 @@ try
 
     //Previous steps were leading me closer and closer to the solution. The last bit I had missing was taking into account the borders. 
     //Also the fact that we may have full maps that are even filled and others odd filled.
-
+    /*
     result = 0;
     double previousCount = -1;
     int step = 0;
@@ -190,6 +227,25 @@ try
         step++;
     }
     double oddFilledCount = result;
+    */
+
+    lastEvenPoints.Add(startPos);
+    evenDistancedPoints.Add(startPos);
+    double evenFilledCount = -1;
+    double oddFilledCount = -1;
+    int step = 1;
+    bool evenStep;
+    while(evenFilledCount!=evenDistancedPoints.Count || oddFilledCount!=oddDistancedPoints.Count){
+        evenStep = step%2==0;
+        if(evenStep){
+            evenFilledCount = evenDistancedPoints.Count;
+        }
+        else{
+            oddFilledCount = oddDistancedPoints.Count;
+        }
+        MakeAStepNew(evenStep);
+        step++;
+    }
 
     Console.WriteLine();
     Console.WriteLine("We get: even={0} and odd={1}",evenFilledCount,oddFilledCount);
@@ -235,64 +291,86 @@ try
     //It is based on the fact that the given number of steps leads us to the edge of the last seen map if we go on a straight line horizontally or vertically...
 
     currentPos.Clear();
-    currentPos.Add(startPos);
-    int nbMapToGoThrough = 2;
-    if(fullSquared%2!=0){
-        nbMapToGoThrough++;
-    }
-    int checkSteps = farthestBorderDistance + 2*stringMap.Count;
-    for(int i=0; i<checkSteps; i++){
-        MakeAStep(true);
-    }
 
-    int topRightCornersBit = 0;
-    int botRightCornersBit = 0;
-    int topLeftCornersBit = 0;
-    int botLeftCornersBit = 0;
-    int topHat = 0;
-    int botHat = 0;
-    int rightHat = 0;
-    int leftHat = 0;
-
-    for(int i=0; i<nbMapToGoThrough-1; i++){
-        foreach(var point in currentPos){
-            if(point.X>stringMap.Count+i*stringMap.Count && point.X<(nbMapToGoThrough-i)*stringMap.Count && point.Y<(nbMapToGoThrough-1-(i+1))*stringMap.Count){
-                topRightCornersBit++;
-            }
-            else if(point.X>stringMap.Count+i*stringMap.Count && point.X<(nbMapToGoThrough-i)*stringMap.Count && point.Y>stringMap.Count+((nbMapToGoThrough-1-(i+1))*stringMap.Count)){
-                botRightCornersBit++;
-            }
-            else if(point.X>-(i+1)*stringMap.Count && point.X<-i*stringMap.Count && point.Y<(nbMapToGoThrough-1-(i+1))*stringMap.Count){
-                topRightCornersBit++;
-            }
-            else if(point.X>-(i+1)*stringMap.Count && point.X<-i*stringMap.Count && point.Y>stringMap.Count+((nbMapToGoThrough-1-(i+1))*stringMap.Count)){
-                botRightCornersBit++;
-            }
-            else if(i==0){
-                //On ne passe qu'une fois dans cette boucle
-                if(point.X>0 && point.X<stringMap.Count && point.Y<-(nbMapToGoThrough-1)*stringMap.Count){
-                    topHat++;
-                }
-                else if(point.X>0 && point.X<stringMap.Count && point.Y>nbMapToGoThrough*stringMap.Count){
-                    botHat++;
-                }
-                else if(point.X>nbMapToGoThrough*stringMap.Count){
-                    rightHat++;
-                }
-                else if(point.X<-(nbMapToGoThrough-1)*stringMap.Count){
-                    leftHat++;
-                }
-            }
-        }
-    }
-
+    lastEvenPoints.Clear();
+    evenDistancedPoints.Clear();
+    lastOddPoints.Clear();
+    oddDistancedPoints.Clear();
+    lastEvenPoints.Add(startPos);
+    evenDistancedPoints.Add(startPos);
 
     if(fullSquared>0){
+        int nbMapToGoThrough = 2;
+        if(fullSquared%2!=0){
+            nbMapToGoThrough++;
+        }
+        int checkSteps = farthestBorderDistance + 2*stringMap.Count;
+        for(int i=0; i<checkSteps; i++){
+            MakeAStepNew((i+1)%2==0,true);
+        }
+        if(checkSteps%2==0){
+            currentPos = evenDistancedPoints;
+        }
+        else{
+            currentPos = oddDistancedPoints;
+        }
+        int topRightCornersBit = 0;
+        int botRightCornersBit = 0;
+        int topLeftCornersBit = 0;
+        int botLeftCornersBit = 0;
+        int topHat = 0;
+        int botHat = 0;
+        int rightHat = 0;
+        int leftHat = 0;
+
+        for(int i=0; i<nbMapToGoThrough-1; i++){
+            foreach(var point in currentPos){
+                if(point.X>stringMap.Count+i*stringMap.Count && point.X<(nbMapToGoThrough-i)*stringMap.Count && point.Y<(nbMapToGoThrough-1-(i+1))*stringMap.Count){
+                    topRightCornersBit++;
+                }
+                else if(point.X>stringMap.Count+i*stringMap.Count && point.X<(nbMapToGoThrough-i)*stringMap.Count && point.Y>stringMap.Count+((nbMapToGoThrough-1-(i+1))*stringMap.Count)){
+                    botRightCornersBit++;
+                }
+                else if(point.X>-(i+1)*stringMap.Count && point.X<-i*stringMap.Count && point.Y<(nbMapToGoThrough-1-(i+1))*stringMap.Count){
+                    topLeftCornersBit++;
+                }
+                else if(point.X>-(i+1)*stringMap.Count && point.X<-i*stringMap.Count && point.Y>stringMap.Count+((nbMapToGoThrough-1-(i+1))*stringMap.Count)){
+                    botLeftCornersBit++;
+                }
+                else if(i==0){
+                    //On ne passe qu'une fois dans cette boucle
+                    if(point.X>0 && point.X<stringMap.Count && point.Y<-(nbMapToGoThrough-1)*stringMap.Count){
+                        topHat++;
+                    }
+                    else if(point.X>0 && point.X<stringMap.Count && point.Y>nbMapToGoThrough*stringMap.Count){
+                        botHat++;
+                    }
+                    else if(point.X>nbMapToGoThrough*stringMap.Count){
+                        rightHat++;
+                    }
+                    else if(point.X<-(nbMapToGoThrough-1)*stringMap.Count){
+                        leftHat++;
+                    }
+                }
+            }
+        }
+    
         if(fullSquared%2==0){
-            result=fullSquared*fullSquared*oddFilledCount + (fullSquared-1)*(fullSquared-1)*evenFilledCount + (fullSquared-1)*(topRightCornersBit+botRightCornersBit+topLeftCornersBit+botLeftCornersBit) + (topHat+botHat+leftHat+rightHat);
+            result2=(fullSquared)*(fullSquared)*((long)oddFilledCount) + (fullSquared-1)*(fullSquared-1)*(long)evenFilledCount + (long)(fullSquared-1)*(topRightCornersBit+botRightCornersBit+topLeftCornersBit+botLeftCornersBit) + (long)(topHat+botHat+leftHat+rightHat);
         }
         else{  
-            result=fullSquared*fullSquared*evenFilledCount + (fullSquared-1)*(fullSquared-1)*oddFilledCount + ((fullSquared-1)/2)*(topRightCornersBit+botRightCornersBit+topLeftCornersBit+botLeftCornersBit) + (topHat+botHat+leftHat+rightHat);
+            result2=fullSquared*fullSquared*(long)evenFilledCount + (fullSquared-1)*(fullSquared-1)*(long)oddFilledCount + (long)((fullSquared-1)/2)*(topRightCornersBit+botRightCornersBit+topLeftCornersBit+botLeftCornersBit) + (long)(topHat+botHat+leftHat+rightHat);
+        }
+    }
+    else{
+        for(int i=0; i<nbSteps2; i++){
+            MakeAStepNew((i+1)%2==0,true);
+        }
+        if(nbSteps2%2==0){
+            result2 = evenDistancedPoints.Count;
+        }
+        else{
+            result2 = oddDistancedPoints.Count;
         }
     }
 
