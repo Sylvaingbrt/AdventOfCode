@@ -8,11 +8,11 @@ List<string> stringMap = new List<string>();
 Dictionary<Point,char> map = new Dictionary<Point,char>();
 List<Point> dirs = new List<Point>{new Point(1,0),new Point(-1,0),new Point(0,1),new Point(0,-1)}; //East, West, South, North
 List<Point> currentPos = new List<Point>();
-int nbSteps = 50;
+int nbSteps = 64;
 
 //For part 2
 Point startPos = new Point(0,0);
-int nbSteps2 = 50;
+int nbSteps2 = 26501365;
 List<Point> fullCoveredMapPoints = new List<Point>();
 
 bool InBound(Point nPos)
@@ -65,7 +65,7 @@ try
     var watch = System.Diagnostics.Stopwatch.StartNew();
 
     //Pass the file path and file name to the StreamReader constructor
-    StreamReader sr = new StreamReader(Directory.GetCurrentDirectory()+"\\..\\..\\..\\TestInput.txt");
+    StreamReader sr = new StreamReader(Directory.GetCurrentDirectory()+"\\..\\..\\..\\Input.txt");
 
     //Read the first line of text
     line = sr.ReadLine();
@@ -203,13 +203,6 @@ try
     int fullSquared = (nbSteps2-farthestBorderDistance)/stringMap.Count;
     Console.WriteLine("We got: steps={3}, farthestBorderDistance={0}, remainingSteps={1}, fullSquared={2}",farthestBorderDistance,remainingSteps,fullSquared,nbSteps2);
 
-
-    currentPos.Clear();
-    currentPos.Add(startPos);
-    for(int i=0; i<remainingSteps+farthestBorderDistance; i++){
-        MakeAStep(true);
-    }
-    result = currentPos.Count;
     
 
 
@@ -228,52 +221,78 @@ try
     //We need to calculate the filled part for each one of them, and use that to calculate more efficiently
     //We can actually make use of our 3x3 square, since we have corners and cropped tiles in it.
 
+    /*
+    currentPos.Clear();
+    currentPos.Add(startPos);
+    for(int i=0; i<remainingSteps+farthestBorderDistance; i++){
+        MakeAStep(true);
+    }
+    result = currentPos.Count;
+    */
+
+    //Based on the site https://work.njae.me.uk/2023/12/29/advent-of-code-2023-day-21/ we would even need, in order to be more precise, to check on a 5x5 square.
+    //Let's do that. (If fullSquared is odd, we would need a 6x6 square...)
+    //It is based on the fact that the given number of steps leads us to the edge of the last seen map if we go on a straight line horizontally or vertically...
+
+    currentPos.Clear();
+    currentPos.Add(startPos);
+    int nbMapToGoThrough = 2;
+    if(fullSquared%2!=0){
+        nbMapToGoThrough++;
+    }
+    int checkSteps = farthestBorderDistance + 2*stringMap.Count;
+    for(int i=0; i<checkSteps; i++){
+        MakeAStep(true);
+    }
+
     int topRightCornersBit = 0;
-    foreach(var point in currentPos){
-        if(point.X<0 && point.Y<startPos.Y){
-            topRightCornersBit++;
-        }
-        else if(InBound(point) && point.Y>=startPos.Y){
-            topRightCornersBit++;
-        }
-    }
-
     int botRightCornersBit = 0;
-    foreach(var point in currentPos){
-        if(point.X<0 && point.Y>startPos.Y){
-            botRightCornersBit++;
-        }
-        else if(InBound(point) && point.Y<=startPos.Y){
-            botRightCornersBit++;
-        }
-    }
-
     int topLeftCornersBit = 0;
-    foreach(var point in currentPos){
-        if(point.X>stringMap.Count && point.Y<startPos.Y){
-            topLeftCornersBit++;
-        }
-        else if(InBound(point) && point.Y>=startPos.Y){
-            topLeftCornersBit++;
+    int botLeftCornersBit = 0;
+    int topHat = 0;
+    int botHat = 0;
+    int rightHat = 0;
+    int leftHat = 0;
+
+    for(int i=0; i<nbMapToGoThrough-1; i++){
+        foreach(var point in currentPos){
+            if(point.X>stringMap.Count+i*stringMap.Count && point.X<(nbMapToGoThrough-i)*stringMap.Count && point.Y<(nbMapToGoThrough-1-(i+1))*stringMap.Count){
+                topRightCornersBit++;
+            }
+            else if(point.X>stringMap.Count+i*stringMap.Count && point.X<(nbMapToGoThrough-i)*stringMap.Count && point.Y>stringMap.Count+((nbMapToGoThrough-1-(i+1))*stringMap.Count)){
+                botRightCornersBit++;
+            }
+            else if(point.X>-(i+1)*stringMap.Count && point.X<-i*stringMap.Count && point.Y<(nbMapToGoThrough-1-(i+1))*stringMap.Count){
+                topRightCornersBit++;
+            }
+            else if(point.X>-(i+1)*stringMap.Count && point.X<-i*stringMap.Count && point.Y>stringMap.Count+((nbMapToGoThrough-1-(i+1))*stringMap.Count)){
+                botRightCornersBit++;
+            }
+            else if(i==0){
+                //On ne passe qu'une fois dans cette boucle
+                if(point.X>0 && point.X<stringMap.Count && point.Y<-(nbMapToGoThrough-1)*stringMap.Count){
+                    topHat++;
+                }
+                else if(point.X>0 && point.X<stringMap.Count && point.Y>nbMapToGoThrough*stringMap.Count){
+                    botHat++;
+                }
+                else if(point.X>nbMapToGoThrough*stringMap.Count){
+                    rightHat++;
+                }
+                else if(point.X<-(nbMapToGoThrough-1)*stringMap.Count){
+                    leftHat++;
+                }
+            }
         }
     }
 
-    int botLeftCornersBit = 0;
-    foreach(var point in currentPos){
-        if(point.X>stringMap.Count && point.Y>startPos.Y){
-            botLeftCornersBit++;
-        }
-        else if(InBound(point) && point.Y<=startPos.Y){
-            botLeftCornersBit++;
-        }
-    }
 
     if(fullSquared>0){
-        if(nbSteps2%2==0){
-            result+=(fullSquared+1)*(fullSquared+1)*oddFilledCount + fullSquared*(fullSquared+3)*evenFilledCount;
+        if(fullSquared%2==0){
+            result=fullSquared*fullSquared*oddFilledCount + (fullSquared-1)*(fullSquared-1)*evenFilledCount + (fullSquared-1)*(topRightCornersBit+botRightCornersBit+topLeftCornersBit+botLeftCornersBit) + (topHat+botHat+leftHat+rightHat);
         }
         else{  
-            result+=(fullSquared+1)*(fullSquared+1)*evenFilledCount + fullSquared*fullSquared*oddFilledCount + fullSquared * (botLeftCornersBit+topLeftCornersBit+botRightCornersBit+topRightCornersBit);
+            result=fullSquared*fullSquared*evenFilledCount + (fullSquared-1)*(fullSquared-1)*oddFilledCount + ((fullSquared-1)/2)*(topRightCornersBit+botRightCornersBit+topLeftCornersBit+botLeftCornersBit) + (topHat+botHat+leftHat+rightHat);
         }
     }
 
