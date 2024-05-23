@@ -102,7 +102,7 @@ try
     //PART 1
     
     for(int i=0; i<nbSteps; i++){
-        MakeAStep();
+        MakeAStep(true);
     }
     result = currentPos.Count;
     Console.WriteLine();
@@ -214,6 +214,7 @@ try
 
 
     //Again, this solution is too simple and.. false. I assumed corners of our diamonds would gently match other side corners but... that is a false assumption.
+    /*
     if(fullSquared>0){
         if(nbSteps2%2==0){
             result+=(fullSquared+1)*(fullSquared+1)*oddFilledCount + fullSquared*(fullSquared+3)*evenFilledCount;
@@ -222,9 +223,59 @@ try
             result+=(fullSquared+1)*(fullSquared+1)*evenFilledCount + fullSquared*(fullSquared+3)*oddFilledCount;
         }
     }
-
+    */
 
     //We need to calculate the filled part for each one of them, and use that to calculate more efficiently
+    //We can actually make use of our 3x3 square, since we have corners and cropped tiles in it.
+
+    int topRightCornersBit = 0;
+    foreach(var point in currentPos){
+        if(point.X<0 && point.Y<startPos.Y){
+            topRightCornersBit++;
+        }
+        else if(InBound(point) && point.Y>=startPos.Y){
+            topRightCornersBit++;
+        }
+    }
+
+    int botRightCornersBit = 0;
+    foreach(var point in currentPos){
+        if(point.X<0 && point.Y>startPos.Y){
+            botRightCornersBit++;
+        }
+        else if(InBound(point) && point.Y<=startPos.Y){
+            botRightCornersBit++;
+        }
+    }
+
+    int topLeftCornersBit = 0;
+    foreach(var point in currentPos){
+        if(point.X>stringMap.Count && point.Y<startPos.Y){
+            topLeftCornersBit++;
+        }
+        else if(InBound(point) && point.Y>=startPos.Y){
+            topLeftCornersBit++;
+        }
+    }
+
+    int botLeftCornersBit = 0;
+    foreach(var point in currentPos){
+        if(point.X>stringMap.Count && point.Y>startPos.Y){
+            botLeftCornersBit++;
+        }
+        else if(InBound(point) && point.Y<=startPos.Y){
+            botLeftCornersBit++;
+        }
+    }
+
+    if(fullSquared>0){
+        if(nbSteps2%2==0){
+            result+=(fullSquared+1)*(fullSquared+1)*oddFilledCount + fullSquared*(fullSquared+3)*evenFilledCount;
+        }
+        else{  
+            result+=(fullSquared+1)*(fullSquared+1)*evenFilledCount + fullSquared*fullSquared*oddFilledCount + fullSquared * (botLeftCornersBit+topLeftCornersBit+botRightCornersBit+topRightCornersBit);
+        }
+    }
 
     /*
     //Output log DEBUG
