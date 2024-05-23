@@ -8,11 +8,11 @@ List<string> stringMap = new List<string>();
 Dictionary<Point,char> map = new Dictionary<Point,char>();
 List<Point> dirs = new List<Point>{new Point(1,0),new Point(-1,0),new Point(0,1),new Point(0,-1)}; //East, West, South, North
 List<Point> currentPos = new List<Point>();
-int nbSteps = 139;
+int nbSteps = 50;
 
 //For part 2
 Point startPos = new Point(0,0);
-int nbSteps2 = 139;
+int nbSteps2 = 50;
 List<Point> fullCoveredMapPoints = new List<Point>();
 
 bool InBound(Point nPos)
@@ -65,7 +65,7 @@ try
     var watch = System.Diagnostics.Stopwatch.StartNew();
 
     //Pass the file path and file name to the StreamReader constructor
-    StreamReader sr = new StreamReader(Directory.GetCurrentDirectory()+"\\..\\..\\..\\Input.txt");
+    StreamReader sr = new StreamReader(Directory.GetCurrentDirectory()+"\\..\\..\\..\\TestInput.txt");
 
     //Read the first line of text
     line = sr.ReadLine();
@@ -108,7 +108,7 @@ try
     Console.WriteLine();
     Console.WriteLine("End of input. Result game 1 found: {0}",result);
 
-    
+    /*
     //DEBUG LOG
     Console.WriteLine();
     for(int j=0;j<stringMap.Count;j++){
@@ -123,7 +123,7 @@ try
         }
         Console.WriteLine();
     }
-    
+    */
 
     //Part 2
     //For part 2, doing the regulat way will take way too much time, and naive function we use is losing too much time on useless calculation.
@@ -134,6 +134,7 @@ try
     //And here I got stuck by the borders growing each time we move. I will search clues from now on.
 
     /*
+    //Naive solution, won't give you the answer after a loooooooong time, if any.
     currentPos.Clear();
     currentPos.Add(startPos);
     for(int i=0; i<nbSteps2; i++){
@@ -141,6 +142,9 @@ try
     }
     result = currentPos.Count;
     */
+
+    /*
+    //This does not take into account blocked cells !!!
     result = 0;
     bool evenStepsNb = nbSteps%2==0;
     bool evenY = startPos.Y%2==0;
@@ -152,22 +156,76 @@ try
             }
         }
     }
+    */
 
+    //Previous steps were leading me closer and closer to the solution. The last bit I had missing was taking into account the borders. 
+    //Also the fact that we may have full maps that are even filled and others odd filled.
+
+    result = 0;
+    double previousCount = -1;
+    int step = 0;
+    currentPos.Clear();
+    currentPos.Add(startPos);
+    while(result!=previousCount || step%2!=0){
+        if(step%2==0){
+            previousCount=result;
+        }
+        MakeAStep();
+        result = currentPos.Count;
+        step++;
+    }
+    double evenFilledCount = result;
+
+    result = 0;
+    previousCount = -1;
+    step = 0;
+    currentPos.Clear();
+    currentPos.Add(startPos);
+    while(result!=previousCount || step%2==0){
+        if(step%2!=0){
+            previousCount=result;
+        }
+        MakeAStep();
+        result = currentPos.Count;
+        step++;
+    }
+    double oddFilledCount = result;
+
+    Console.WriteLine();
+    Console.WriteLine("We get: even={0} and odd={1}",evenFilledCount,oddFilledCount);
+
+
+    Console.WriteLine();
     Console.WriteLine("Map size: {0},{1}",stringMap[0].Length,stringMap.Count);
-    int farthestBorderDistance = Math.Max(startPos.X,Math.Max(startPos.Y,Math.Max(stringMap[0].Length-startPos.X,stringMap.Count-startPos.Y)));
+    int farthestBorderDistance = Math.Max(startPos.X,Math.Max(startPos.Y,Math.Max(stringMap[0].Length-startPos.X,stringMap.Count-startPos.Y)))-1;
     //We assume that maps are squared...
     int remainingSteps = (nbSteps2-farthestBorderDistance)%stringMap.Count;
     int fullSquared = (nbSteps2-farthestBorderDistance)/stringMap.Count;
     Console.WriteLine("We got: steps={3}, farthestBorderDistance={0}, remainingSteps={1}, fullSquared={2}",farthestBorderDistance,remainingSteps,fullSquared,nbSteps2);
 
-/*
+
     currentPos.Clear();
     currentPos.Add(startPos);
     for(int i=0; i<remainingSteps+farthestBorderDistance; i++){
         MakeAStep(true);
     }
-    result = currentPos.Count + (fullSquared*fullCoveredMapPoints.Count);
-*/
+    result = currentPos.Count;
+    
+
+
+    //Again, this solution is too simple and.. false. I assumed corners of our diamonds would gently match other side corners but... that is a false assumption.
+    if(fullSquared>0){
+        if(nbSteps2%2==0){
+            result+=(fullSquared+1)*(fullSquared+1)*oddFilledCount + fullSquared*(fullSquared+3)*evenFilledCount;
+        }
+        else{  
+            result+=(fullSquared+1)*(fullSquared+1)*evenFilledCount + fullSquared*(fullSquared+3)*oddFilledCount;
+        }
+    }
+
+
+    //We need to calculate the filled part for each one of them, and use that to calculate more efficiently
+
     /*
     //Output log DEBUG
     string filename1 = "Test1DebugLogs";
