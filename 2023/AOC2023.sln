@@ -45,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PulsePropagation", "PulsePr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StepCounter", "StepCounter\StepCounter.csproj", "{69842A15-E5AD-43CE-98C7-33D7AC604078}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SandSlabs", "SandSlabs\SandSlabs.csproj", "{4A271AB0-2998-44F1-A2D8-71A05EE0318A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -142,5 +144,9 @@ Global
 		{69842A15-E5AD-43CE-98C7-33D7AC604078}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69842A15-E5AD-43CE-98C7-33D7AC604078}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69842A15-E5AD-43CE-98C7-33D7AC604078}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A271AB0-2998-44F1-A2D8-71A05EE0318A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A271AB0-2998-44F1-A2D8-71A05EE0318A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A271AB0-2998-44F1-A2D8-71A05EE0318A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A271AB0-2998-44F1-A2D8-71A05EE0318A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
