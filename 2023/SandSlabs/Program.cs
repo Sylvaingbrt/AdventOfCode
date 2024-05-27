@@ -11,6 +11,9 @@ int maxZLevel = 0;
 int maxXLevel = 0;
 int maxYLevel = 0;
 
+//For part 2
+HashSet<int> bricksThatWouldFall = new HashSet<int>();
+
 bool Overlaping(int x1Min, int x1Max, int y1Min, int y1Max, int x2Min, int x2Max, int y2Min, int y2Max){
     return ((x1Min<=x2Min && x1Max>=x2Min) || (x1Min<=x2Max && x1Max>=x2Max) || (x1Min>x2Min && x1Max<x2Max)) && ((y1Min<=y2Min && y1Max>=y2Min) || (y1Min<=y2Max && y1Max>=y2Max) || (y1Min>y2Min && y1Max<y2Max));
 }
@@ -236,6 +239,44 @@ try
 
     Console.WriteLine();
     Console.WriteLine("End of input. Result game 1 found: {0}",result);
+
+
+    //PART 2
+    result = 0;
+    //Console.WriteLine();
+    for (int level=1; level<=maxZLevel; level++){
+        if(bricksByZLevel.ContainsKey(level)){
+            foreach(int brickNumber in bricksByZLevel[level]){
+                //Console.WriteLine("Removing brick {0}",brickNumber);
+                bricksThatWouldFall.Clear();
+                bricksThatWouldFall.Add(brickNumber);
+                for(int i=level+1; i<=maxZLevel; i++){
+                    if(bricksByZLevel.ContainsKey(i)){
+                        foreach(int otherBrickNumber in bricksByZLevel[i]){
+                            //Console.WriteLine("Looking at brick {0} at level {1}",otherBrickNumber, i);
+                            bool canFall = true;
+                            foreach (int supportingBricks in bricksSupportingABrick[otherBrickNumber]){
+                                if(!bricksThatWouldFall.Contains(supportingBricks)){
+                                    canFall = false;
+                                }
+                            }
+                            if(canFall){
+                                //Console.WriteLine("it can fall !");
+                                bricksThatWouldFall.Add(otherBrickNumber);
+                            }
+                        }
+                    }
+                }
+                result+=bricksThatWouldFall.Count-1;
+            }
+        }
+    }
+    
+
+
+
+    Console.WriteLine();
+    Console.WriteLine("End of input. Result game 2 found: {0}",result);
 
     watch.Stop();
     var elapsedMs = watch.ElapsedMilliseconds;
