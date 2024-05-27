@@ -23,7 +23,7 @@ public class Node : IEquatable<Node>
 
     public bool Equals(Node otherNode){
         if(otherNode != null){
-            return pos==otherNode.pos && fromPos==otherNode.fromPos && gCost==otherNode.gCost;
+            return pos==otherNode.pos; //the previous conditions were not in sync with the rules. We know that we cannot walk twice on the same cell, it does not depends on other factors (and we are not in a regular A* search)
         }
         return false;
     }
@@ -50,15 +50,31 @@ class Program
         return lowestFCostNode;
     }
 
+    static int GetIndexHighestFCostNodeOfLists(List<List<Node>> nodeListOfLists)
+    {
+        int index = 0;
+        Node lowestFCostNode = nodeListOfLists[0][nodeListOfLists[0].Count-1];
+        for(int i = 1; i < nodeListOfLists.Count; i++)
+        {
+            if(nodeListOfLists[i][nodeListOfLists[i].Count-1].GetFCost() > lowestFCostNode.GetFCost())
+            {
+                lowestFCostNode = nodeListOfLists[i][nodeListOfLists[i].Count-1];
+                index = i;
+            }
+        }
+
+        return index;
+    }
+
     static bool InBound(int X, int Y){
         return X >= 0 && X < map[0].Length && Y >= 0 && Y < map.Count;
     }
 
-    static bool CanWalk(int X, int Y, int fromX, int fromY){
-        return InBound(X,Y) && (map[Y][X]=='.' || (map[Y][X]!='#' && ((X>fromX && map[Y][X]!='<') || (X<fromX && map[Y][X]!='>') || (Y>fromY && map[Y][X]!='^') || (Y<fromY && map[Y][X]!='v'))));
+    static bool CanWalk(int X, int Y, int fromX, int fromY, bool slippery){
+        return InBound(X,Y) && (map[Y][X]=='.' || (map[Y][X]!='#' && (!slippery || (X>fromX && map[Y][X]!='<') || (X<fromX && map[Y][X]!='>') || (Y>fromY && map[Y][X]!='^') || (Y<fromY && map[Y][X]!='v'))));
     }
 
-    static List<Node> GetNeighboursList(Node currentNode){
+    static List<Node> GetNeighboursList(Node currentNode, bool slippery = true){
         List<Node> neighboursList = new List<Node>();
         List<Point> neighbourPos = new List<Point>();
 
@@ -67,7 +83,7 @@ class Program
         int newX;
         int newY;
         
-        if(map[Y][X]!='.'){
+        if(map[Y][X]!='.' && slippery){
             switch(map[Y][X]){
                 case '<':
                     neighbourPos.Add(new Point(X-1,Y));
@@ -98,7 +114,7 @@ class Program
             newX = p.X;
             newY = p.Y;
             
-            if(CanWalk(newX,newY,X,Y) && (currentNode.from==null || p!=currentNode.fromPos)){
+            if(CanWalk(newX,newY,X,Y,slippery) && (currentNode.from==null || p!=currentNode.fromPos)){
                 Node neighbourNode = new Node(new Point(newX,newY),currentNode.gCost-1,(map.Count-1)-newY+(map[0].Length-1)-newX);
                 //neighbourNode.gCost = currentNode.gCost-1;
                 neighbourNode.from = currentNode;
@@ -113,7 +129,6 @@ class Program
         List<List<Node>> allPaths = new List<List<Node>>();
         
         List<Node> openedList = new List<Node>{startNode};
-        List<Node> closedList = new List<Node>();
 
         startNode.gCost = 0;
 
@@ -143,18 +158,10 @@ class Program
             }
             else{
                 openedList.Remove(currentNode);
-                closedList.Add(currentNode);
 
                 foreach(Node neighbourNode in GetNeighboursList(currentNode)){
-                    if(closedList.Contains(neighbourNode)){
-                        continue;
-                    }
-                    
-                    if(!openedList.Contains(neighbourNode)){
-                        openedList.Add(neighbourNode);
-                    }
-                    
-                    
+                    //The previous code here was slowing down the process and useless since the method search for all paths.
+                    openedList.Add(neighbourNode);
                 }
             }
         }
@@ -167,6 +174,69 @@ class Program
         Node startNode = new Node(startPos,0,(map.Count-1)+(map[0].Length-1));
         
         return FindAllPath(startNode,endPos);
+    }
+
+    static List<List<Node>> FindAllPathNew(Node startNode, Point endPos){
+        List<List<Node>> allPaths = new List<List<Node>>();
+        
+        List<List<Node>> openedListOfList = new List<List<Node>>{new List<Node>{startNode}};
+        //List<Node> closedList = new List<Node>();
+
+        startNode.gCost = 0;
+
+        while(openedListOfList.Count > 0){
+            int currentListIndex = GetIndexHighestFCostNodeOfLists(openedListOfList);
+            List<Node> currList = openedListOfList[currentListIndex];
+            Node currentNode = currList[currList.Count-1];
+            /*
+            Point fromPos = currentNode.from==null?new Point(-1,-1):currentNode.from.pos;
+            string logLine = string.Format("Checking node at ({0},{1}), coming from ({4},{5}), with a heat loss of {2}. (Own heat loss is {3}, nb of jumps in same dir: max={6}, min={7})", 
+            currentNode.pos.X, currentNode.pos.Y, currentNode.gCost, currentNode.weight,fromPos.X, fromPos.Y, currentNode.nbMaxBeforeTurn,currentNode.nbMinBeforeTurn);
+            Console.WriteLine(logLine);
+            //LogInOutput(logLine);
+            */
+            
+            openedListOfList.RemoveAt(currentListIndex);
+            if(endPos == currentNode.pos){
+                //Found the end, get the full path.
+                List<Node> path = new List<Node>{currentNode};
+                Node pathNode = currentNode;
+                //Console.WriteLine("Checked {1} nodes and {0} nodes waiting",openedList.Count-1,closedList.Count+1);
+                while(pathNode.from != null)
+                {
+                    path.Add(pathNode.from);
+                    pathNode = pathNode.from;
+                    //Console.WriteLine("Previous node at {0},{1}, with a heat loss of {2}. (Own heat loss is {3})", pathNode.pos.X, pathNode.pos.Y, pathNode.gCost, pathNode.weight);
+                }
+                path.Reverse();
+                allPaths.Add(path);
+            }
+            else{
+                //closedList.Add(currentNode);
+
+                foreach(Node neighbourNode in GetNeighboursList(currentNode,false)){
+                    /*
+                    if(closedList.Contains(neighbourNode)){
+                        continue;
+                    }
+                    */
+                    if(!currList.Contains(neighbourNode)){
+                        List<Node> newList = currList.ToList();
+                        newList.Add(neighbourNode);
+                        openedListOfList.Add(newList);
+                    }
+                }
+            }
+        }
+
+        //No more nodes in opened list... all path founded?
+        return allPaths;
+    }
+
+    static List<List<Node>> FindAllPathNew(Point startPos, Point endPos){
+        Node startNode = new Node(startPos,0,(map.Count-1)+(map[0].Length-1));
+        
+        return FindAllPathNew(startNode,endPos);
     }
 
     static List<Point> GetPointsFromPath(List<Node> path)
@@ -213,10 +283,10 @@ class Program
             List<List<Node>> paths = FindAllPath(startPos, endPos);
             List<Node> path = new List<Node>();
 
-            Console.WriteLine();
-            Console.WriteLine("We found paths with following steps:");
+            //Console.WriteLine();
+            //Console.WriteLine("We found paths with following steps:");
             foreach(List<Node> aPath in paths){
-                Console.WriteLine(aPath.Count-1);
+                //Console.WriteLine(aPath.Count-1);
                 if(aPath.Count>path.Count){
                     path = aPath;
                 }
@@ -250,6 +320,30 @@ class Program
             Console.WriteLine();
             Console.WriteLine("End of input. Result game 1 found: {0}",result);
 
+            //PART 2
+            //My first idea was to change the getneighbours and canwalk functions to say if not slippery then we can walk on all cells except walls '#'. But that leads to an infinit loop since the findAllPath method can go full round on certain path.
+            //So we need a news function, similar to the current one but that prevent that from happening.
+            paths = FindAllPathNew(startPos, endPos);
+            path = new List<Node>();
+
+            //Console.WriteLine();
+            //Console.WriteLine("We found not slippery paths with following steps:");
+            foreach(List<Node> aPath in paths){
+                //Console.WriteLine(aPath.Count-1);
+                if(aPath.Count>path.Count){
+                    path = aPath;
+                }
+            }
+            
+            if(path!=null && path.Count>0){
+                //Console.WriteLine("At the end we have: {0}",path[path.Count-1].gCost);
+                result = path.Count-1;
+            }
+            
+
+            Console.WriteLine();
+            Console.WriteLine("End of input. Result game 2 found: {0}",result);
+            
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
             Console.WriteLine();
