@@ -145,6 +145,53 @@ class Program
         return neighboursList;
     }
 
+    static List<Point> GetNeighboursList(Point currentPos, Point fromPos, bool slippery = true){
+        List<Point> neighboursList = new List<Point>();
+        List<Point> neighbourPos = new List<Point>();
+
+        int X = currentPos.X;
+        int Y = currentPos.Y;
+        int newX;
+        int newY;
+        
+        if(map[Y][X]!='.' && slippery){
+            switch(map[Y][X]){
+                case '<':
+                    neighbourPos.Add(new Point(X-1,Y));
+                    break;
+                case '>':
+                    neighbourPos.Add(new Point(X+1,Y));
+                    break;
+                case '^':
+                    neighbourPos.Add(new Point(X,Y-1));
+                    break;
+                case 'v':
+                    neighbourPos.Add(new Point(X,Y+1));
+                    break;
+                default:
+                    break;
+            }
+        }
+        else{
+            neighbourPos.Add(new Point(X-1,Y));
+            neighbourPos.Add(new Point(X+1,Y));
+            neighbourPos.Add(new Point(X,Y-1));
+            neighbourPos.Add(new Point(X,Y+1));
+        }
+
+
+        for(int i = 0; i < neighbourPos.Count; i++){
+            Point p = neighbourPos[i];
+            newX = p.X;
+            newY = p.Y;
+            
+            if(CanWalk(newX,newY,X,Y,slippery) && (fromPos.X==-1 || p!=fromPos)){
+                neighboursList.Add(p);
+            }
+        }
+        return neighboursList;
+    }
+
     static List<List<Node>> FindAllPath(Node startNode, Point endPos, bool slippery){
         List<List<Node>> allPaths = new List<List<Node>>();
         
@@ -223,64 +270,42 @@ class Program
         return FindAllPath(startNode,endPos,slippery);
     }
 
-    static List<int> FindAllPathNew(Node startNode, Point endPos, List<Node> pathUntilHere, bool slippery){
+    static List<int> FindAllPathNew(Point startPos, Point startPrevPos, Point endPos, List<Point> pathUntilHere, int countUntilHere, bool slippery){
         List<int> allPathsCount = new List<int>();
-        Node currentNode = startNode;
-        //if(!pathUntilHere.Contains(currentNode)){
-            //pathUntilHere.Add(currentNode);
-            List<Node> neighboursList = GetNeighboursList(currentNode,slippery);
-            bool walk = (endPos != currentNode.pos) && neighboursList.Count==1;
-            while(walk){
-                currentNode = neighboursList[0];
+        Point currentPos = startPos;
+        Point prevPos = startPrevPos;
+        List<Point> neighboursList = GetNeighboursList(currentPos,prevPos,slippery);
+        bool walk = (endPos != currentPos) && neighboursList.Count==1;
 
-                /*
-                Point fromPos = currentNode.from==null?new Point(-1,-1):currentNode.from.pos;
-                string logLine = string.Format("Checking node at ({0},{1}), coming from ({4},{5}), with a heat loss of {2}. (Own heat loss is {3}, nb of jumps in same dir: max={6}, min={7})", 
-                currentNode.pos.X, currentNode.pos.Y, currentNode.gCost, currentNode.weight,fromPos.X, fromPos.Y, currentNode.nbMaxBeforeTurn,currentNode.nbMinBeforeTurn);
-                Console.WriteLine(logLine);
-                //LogInOutput(logLine);
-                */
+        while(walk){
+            countUntilHere++;
+            prevPos = currentPos;
+            currentPos = neighboursList[0];
 
-                /*
-                if(pathUntilHere.Contains(currentNode)){
-                    walk=false;
-                }
-                else{
-                    pathUntilHere.Add(currentNode);
-                    neighboursList = GetNeighboursList(currentNode,false);
-                    walk = (endPos != currentNode.pos) && neighboursList.Count==1;
-                }
-                */
-                neighboursList = GetNeighboursList(currentNode,slippery);
-                walk = (endPos != currentNode.pos) && neighboursList.Count==1;
-                //if(walk){
-                //    pathUntilHere.Add(currentNode);
-                //}
+            /*
+            Point fromPos = currentNode.from==null?new Point(-1,-1):currentNode.from.pos;
+            string logLine = string.Format("Checking node at ({0},{1}), coming from ({4},{5}), with a heat loss of {2}. (Own heat loss is {3}, nb of jumps in same dir: max={6}, min={7})", 
+            currentNode.pos.X, currentNode.pos.Y, currentNode.gCost, currentNode.weight,fromPos.X, fromPos.Y, currentNode.nbMaxBeforeTurn,currentNode.nbMinBeforeTurn);
+            Console.WriteLine(logLine);
+            //LogInOutput(logLine);
+            */
+
+            neighboursList = GetNeighboursList(currentPos,prevPos,slippery);
+            walk = (endPos != currentPos) && neighboursList.Count==1;
+        }
+        if(!pathUntilHere.Contains(currentPos)){
+            if(endPos == currentPos){
+                allPathsCount.Add(countUntilHere);
             }
-            if(!pathUntilHere.Contains(currentNode)){
-                if(endPos == currentNode.pos){
-                    /*
-                    List<Node> path = new List<Node>{currentNode};
-                    Node pathNode = currentNode;
-                    //Console.WriteLine("Checked {1} nodes and {0} nodes waiting",openedList.Count-1,closedList.Count+1);
-                    while(pathNode.from != null)
-                    {
-                        path.Add(pathNode.from);
-                        pathNode = pathNode.from;
-                        //Console.WriteLine("Previous node at {0},{1}, with a heat loss of {2}. (Own heat loss is {3})", pathNode.pos.X, pathNode.pos.Y, pathNode.gCost, pathNode.weight);
-                    }
-                    path.Reverse();
-                    */
-                    allPathsCount.Add(currentNode.gCost);
-                }
-                else if(neighboursList.Count>1){
-                    pathUntilHere.Add(currentNode);
-                    foreach(Node neighbour in neighboursList){
-                        allPathsCount.AddRange(FindAllPathNew(neighbour,endPos,new List<Node>(pathUntilHere),slippery));
-                    }
+            else if(neighboursList.Count>1){
+                countUntilHere++;
+                prevPos = currentPos;
+                pathUntilHere.Add(currentPos);
+                foreach(Point neighbour in neighboursList){
+                    allPathsCount.AddRange(FindAllPathNew(neighbour,prevPos,endPos,new List<Point>(pathUntilHere),countUntilHere,slippery));
                 }
             }
-        //}
+        }
         
 
         //No more nodes in opened list... all path founded?
@@ -288,9 +313,7 @@ class Program
     }
 
     static List<int> FindAllPathNew(Point startPos, Point endPos, bool slippery){
-        Node startNode = new Node(startPos,0,Math.Abs(endPos.Y-startPos.Y)+Math.Abs(endPos.X-startPos.X));//, new HashSet<Point>());
-        
-        return FindAllPathNew(startNode,endPos,new List<Node>(),slippery);
+        return FindAllPathNew(startPos,new Point(-1,-1),endPos,new List<Point>(),0,slippery);
     }
 
     static List<Point> GetPointsFromPath(List<Node> path)
@@ -380,7 +403,7 @@ class Program
             //My first idea was to change the getneighbours and canwalk functions to say if not slippery then we can walk on all cells except walls '#'. But that leads to an infinit loop since the findAllPath method can go full round on certain path.
             //So I tried a new function, recursive, that will go through all paths until it loops or find the end.
             result = 0;
-            List<int> pathsCounts = FindAllPathNew(startPos, endPos, true);
+            List<int> pathsCounts = FindAllPathNew(startPos, endPos, false);
             //path = new List<Node>();
 
             //Console.WriteLine();
