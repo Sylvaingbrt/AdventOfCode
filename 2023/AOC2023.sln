@@ -49,6 +49,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SandSlabs", "SandSlabs\Sand
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ALongWalk", "ALongWalk\ALongWalk.csproj", "{6A1941A8-335E-40C9-90E7-2AA4262B4851}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeverTellMeTheOdds", "NeverTellMeTheOdds\NeverTellMeTheOdds.csproj", "{71081885-D0E6-4C80-9D34-9165E241103E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -154,5 +156,9 @@ Global
 		{6A1941A8-335E-40C9-90E7-2AA4262B4851}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A1941A8-335E-40C9-90E7-2AA4262B4851}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A1941A8-335E-40C9-90E7-2AA4262B4851}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71081885-D0E6-4C80-9D34-9165E241103E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71081885-D0E6-4C80-9D34-9165E241103E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71081885-D0E6-4C80-9D34-9165E241103E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71081885-D0E6-4C80-9D34-9165E241103E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
