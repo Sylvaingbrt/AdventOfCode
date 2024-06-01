@@ -14,6 +14,13 @@ bool IntersectInBound2D(Tuple<double,double,double> pA, Tuple<double,double,doub
     double t1 = 0;
     double t2 = 0;
 
+    if((vB.Item2*vA.Item1)-(vB.Item1*vA.Item2)==0 && (vB.Item3*vA.Item2)-(vB.Item2*vA.Item3)==0 && (vB.Item1*vA.Item3)-(vB.Item3*vA.Item1)==0){
+
+        Console.WriteLine("Calcul: {0}+{1}+{2}-{3}-{4}-{5}={6}",vB.Item2*vA.Item1,vB.Item3*vA.Item2,vB.Item1*vA.Item3,vB.Item1*vA.Item2,vB.Item2*vA.Item3,vB.Item3*vA.Item1,0);
+        Console.WriteLine("Parallel vectors in: ({0};{1},{2}) | ({3};{4},{5}) and ({6};{7},{8}) | ({9};{10},{11})",pA.Item1,pA.Item2,pA.Item3,pB.Item1,pB.Item2,pB.Item3,vA.Item1,vA.Item2,vA.Item3,vB.Item1,vB.Item2,vB.Item3);
+        Console.WriteLine("Parallel in space");
+    }
+
 
     if((vB.Item2*vA.Item1)-(vB.Item1*vA.Item2)==0){
         //Colinear vectors, parallel paths, we need to check if they can intersect
@@ -32,7 +39,6 @@ bool IntersectInBound2D(Tuple<double,double,double> pA, Tuple<double,double,doub
             t1 = (pA.Item2-pB.Item2)/vB.Item2;
         }
         */
-
 
         //It seems like no 2D parallel paths intersects... however, technically, it could. So I leave the above code (not finished, but it works with the following simplification)
         return false;
@@ -160,6 +166,29 @@ try
     Console.WriteLine("End of input. Result game 1 found: {0}",result);
 
     //PART 2
+    //I went full code at first, try to find my way with an incremental or recursive way to search and validate a solution when in fact it is a super mathematical problem.
+    //A good way would be to solve a system of equations that would gives us the solution:
+    //We know that our rock will have a line that will collide all others so it validates the equation:
+    //(Velocity_rock * time + StartPos_rock = Velocity_hail * time + StartPos_hail)
+    //VXr*t + Xr = VXh*t + Xh
+    //VYr*t + Yr = VYh*t + Yh
+    //VZr*t + Zr = VZh*t + Zh
+    //So we have 3 equations and 7 unknown variables (VXr, Vyr, VZr, Xr, Yr, Zr, t)
+    //But if we do this for 3 different hails, we have 9 equations for 9 varaibles !
+
+
+    //In exemple we have to solve the following system: 
+    //ar+x=-2r+19
+    //br+y=1r+13
+    //cr+z=-2r+30
+    //as+x=-1s+18
+    //bs+y=-1s+19
+    //cs+z=-2s+22
+    //at+x=-2t+20
+    //bt+y=-2t+25
+    //ct+z=-4t+34
+
+
 
     Console.WriteLine();
     Console.WriteLine("End of input. Result game 2 found: {0}",result);
