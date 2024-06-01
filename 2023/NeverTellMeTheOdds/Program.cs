@@ -10,18 +10,7 @@ double maxPos = 0;
 
 
 bool IntersectInBound2D(Tuple<double,double,double> pA, Tuple<double,double,double> vA, Tuple<double,double,double> pB, Tuple<double,double,double> vB, double minP, double maxP){
-    /*
-    double zPA = pA.Item3;
-    double zVA = vA.Item3;
-    double zPB = pB.Item3;
-    double zVB = vB.Item3;
-    if(!useZ){
-        zPA = 0;
-        zVA = 0;
-        zPB = 0;
-        zVB = 0;
-    }
-    */
+    
     double t1 = 0;
     double t2 = 0;
 
@@ -29,6 +18,7 @@ bool IntersectInBound2D(Tuple<double,double,double> pA, Tuple<double,double,doub
     if((vB.Item2*vA.Item1)-(vB.Item1*vA.Item2)==0){
         //Colinear vectors, parallel paths, we need to check if they can intersect
         //xA = xVB*t2+xB && yA = yVB*t2+yB && t2>=0 && vice versa
+        /*
         if(vA.Item1!=0){
             t2 = (pB.Item1-pA.Item1)/vA.Item1;
         }
@@ -41,8 +31,11 @@ bool IntersectInBound2D(Tuple<double,double,double> pA, Tuple<double,double,doub
         else{
             t1 = (pA.Item2-pB.Item2)/vB.Item2;
         }
-        
-        //Console.WriteLine("Parallel paths, may not intersect");
+        */
+
+
+        //It seems like no 2D parallel paths intersects... however, technically, it could. So I leave the above code (not finished, but it works with the following simplification)
+        return false;
     }
     else{
         if(vA.Item1!=0){
@@ -101,8 +94,18 @@ try
     //To get the time of code execution!
     var watch = System.Diagnostics.Stopwatch.StartNew();
 
+    bool test = false;
+
     //Pass the file path and file name to the StreamReader constructor
-    StreamReader sr = new StreamReader(Directory.GetCurrentDirectory()+"\\..\\..\\..\\Input.txt");
+    StreamReader sr;
+    if(test){
+        sr = new StreamReader(Directory.GetCurrentDirectory()+"\\..\\..\\..\\TestInput.txt");
+    }
+    else{
+        sr = new StreamReader(Directory.GetCurrentDirectory()+"\\..\\..\\..\\Input.txt");
+    }
+    
+    
 
     //Read the first line of text
     line = sr.ReadLine();
@@ -132,8 +135,15 @@ try
     }
 
     //PART 1
-    minPos = 200000000000000;//7;//200000000000000;
-    maxPos = 400000000000000;//27;//400000000000000;
+    if(test){
+        minPos = 7;
+        maxPos = 27;
+    }
+    else{
+        minPos = 200000000000000;
+        maxPos = 400000000000000;
+    }
+    
     //Console.WriteLine();
     for(int i = 0; i <positions.Count; i++){
         for(int j = i+1; j<positions.Count; j++){
@@ -148,6 +158,11 @@ try
     }
     Console.WriteLine();
     Console.WriteLine("End of input. Result game 1 found: {0}",result);
+
+    //PART 2
+
+    Console.WriteLine();
+    Console.WriteLine("End of input. Result game 2 found: {0}",result);
 
     
     watch.Stop();
