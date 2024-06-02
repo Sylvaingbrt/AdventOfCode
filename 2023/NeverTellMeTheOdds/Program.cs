@@ -191,7 +191,7 @@ try
 
 
     Console.WriteLine();
-    Console.WriteLine("End of input. Result game 2 found: {0}",result);
+    Console.WriteLine("End of input. Result game 2 found by following the same method as Simon Toth you can find here : https://medium.com/@simontoth/daily-bit-e-of-c-advent-of-code-day-24-3faeef93c982");
 
     
     watch.Stop();
