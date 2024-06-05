@@ -51,6 +51,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ALongWalk", "ALongWalk\ALon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeverTellMeTheOdds", "NeverTellMeTheOdds\NeverTellMeTheOdds.csproj", "{71081885-D0E6-4C80-9D34-9165E241103E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snowverload", "Snowverload\Snowverload.csproj", "{70554877-8BF3-4368-BFE4-31647D24A044}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -160,5 +162,9 @@ Global
 		{71081885-D0E6-4C80-9D34-9165E241103E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71081885-D0E6-4C80-9D34-9165E241103E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71081885-D0E6-4C80-9D34-9165E241103E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70554877-8BF3-4368-BFE4-31647D24A044}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70554877-8BF3-4368-BFE4-31647D24A044}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70554877-8BF3-4368-BFE4-31647D24A044}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70554877-8BF3-4368-BFE4-31647D24A044}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
